@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnWG Language Tutor™ 🌍</title>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Moving Banner -->
+    <div class="moving-banner">
+        <p>🪐 Welcome to LearnWG Language Tutor! 🌍 📘 We support English, Spanish, French, German, and Portuguese! 📬 Please check the User Guide for tips on getting started and making the most of your learning journey! 🎈 🌐 Visit <a href="https://learnwithgeorge.site" target="_blank">our website</a> 🚀 💫 ¡Bienvenido al Tutor de Idiomas de LearnWG! 🌎 📚 ¡Ofrecemos soporte para inglés, español, francés, alemán y portugués! 🧳 🎒 ¡Consulta la Guía del Usuario para consejos sobre cómo comenzar y aprovechar al máximo tu aprendizaje! 🎉 🌐 Visita <a href="https://learnwithgeorge.site" target="_blank">nuestro sitio web</a> 🚀 🌻 Bienvenue sur le tuteur de langues LearnWG ! 🌌 📘 Nous proposons un support pour l'anglais, l'espagnol, le français, l'allemand et le portugais ! 🛼 📚 Consultez le Guide de l'Utilisateur pour des conseils sur la façon de commencer et de tirer le meilleur parti de votre apprentissage ! 🍀 🌐 Visitez <a href="https://learnwithgeorge.site" target="_blank">notre site web</a> 🚀 🌹 Bem-vindo ao Tutor de Idiomas LearnWG! 🏝️ 📗 Oferecemos suporte para inglês, espanhol, francês, alemão e português! 🧭 🎓 Consulte o Guia do Usuário para dicas sobre como começar e aproveitar ao máximo o seu aprendizado! 🎆 🌐 Visite <a href="https://learnwithgeorge.site" target="_blank">nosso site</a> 🚀 🌼 Willkommen beim LearnWG-Sprachlehrer! 🌄 📙 Wir unterstützen Englisch, Spanisch, Französisch, Deutsch und Portugiesisch! 🪁 📔 Bitte schauen Sie im Benutzerhandbuch nach, um Tipps für den Einstieg und zur optimalen Nutzung Ihres Lernwegs zu erhalten! 🎯 🌐 Besuchen Sie <a href="https://learnwithgeorge.site" target="_blank">unsere Webseite</a> 🚀</p>
+    </div>
+
+    <div class="chat-container">
+        <header>
+            <h1>Language Tutor™ </h1>
+            <p>Your AI Language Companion 📚🤖</p>
+        </header>
+        
+        <div id="chat-log" class="chat-log">
+            <!-- Chat messages will appear here -->
+        </div>
+        
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Type your question here... ✍️" />
+            <button onclick="sendMessage()">Send 🚀</button>
+            <button id="mic-button" onclick="toggleVoiceRecognition()" title="Start Voice Input">🎤</button>
+        </div>
+
+        <footer>
+            <button class="tutorial-button" onclick="openTutorial()">User Guide 📘</button>
+            <p>&copy; <span id="year"></span> <a href="https://learnwithgeorge.site" target="_blank">LearnWG</a></p>
+        </footer>
+    </div>
+
+    <!-- Tutorial Modal -->
+    <div id="tutorial-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeTutorial()">&times;</span>
+
+            <!-- English Section -->
+            <section class="tutorial-section">
+                <h2>Language Tutor™ - Welcome!</h2>
+                <p> This AI assistant supports English, Spanish, French, German, and Portuguese to help you practice & learn multiple languages with ease. Here's how to get started:</p>
+                <ul>
+                    <li>💬 <strong>Ask any question</strong> related to grammar, vocabulary, pronunciation, or language usage in any of the supported languages.</li>
+                    <li>📖 <strong>Get detailed explanations</strong> and examples tailored to each language's unique grammar and nuances.</li>
+                    <li>🔍 <strong>Practice conversations</strong> by typing sentences, and receive AI-generated responses in the same language.</li>
+                    <li>🎤 <strong>Use Voice Input</strong> by clicking the 🎤 button to speak your questions.</li>
+                </ul>
+                <p>✍️ Type a question or click the 🎤 button and speak your question, then hit "Send" or wait for your speech to be processed.</p>
+            </section>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Set the current year in the footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
