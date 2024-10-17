@@ -136,7 +136,7 @@ header p {
 /* User Message Styling */
 .user-message {
     background: linear-gradient(135deg, #f2c718, #e0b200); /* Gradient background */
-    color: #000;
+    color: white;
     text-align: right;
     border-radius: 12px 12px 0 12px;
     align-self: flex-end;
