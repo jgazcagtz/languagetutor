@@ -386,10 +386,10 @@ footer a:hover {
         padding: 8px 16px;
     }
 
-    /* Adjust footer text size */
-    footer p {
+    /* Remove footer text size adjustment to maintain original styling */
+    /* footer p {
         font-size: 0.75em;
-    }
+    } */
 
     /* Adjust tutorial button size */
     .tutorial-button {
