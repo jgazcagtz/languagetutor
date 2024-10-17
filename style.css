@@ -398,8 +398,19 @@ footer a:hover {
     }
 
     /* Optional: Adjust the height of the chat-container to better fit mobile screens */
-    .chat-container {
+    /* .chat-container {
         height: calc(100vh - 80px); /* Adjust based on new padding and banner height */
+    /* } */
+
+    /* **Footer Adjustments for Mobile** */
+    footer {
+        flex-wrap: wrap; /* Allow footer items to wrap to the next line if necessary */
+        justify-content: center; /* Center items horizontally */
+        text-align: center; /* Center text within each item */
+    }
+
+    footer p, footer a {
+        margin: 5px 0; /* Add vertical spacing between items */
     }
 }
 
