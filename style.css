@@ -1,0 +1,516 @@
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Import League Spartan */
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap');
+
+/* Body Styling */
+body {
+    font-family: 'League Spartan', sans-serif;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    color: #f2c718;
+    overflow: hidden;
+    animation: fadeIn 1s ease-out forwards;
+    position: relative; /* To position the banner correctly */
+    padding-top: 50px; /* Adjust based on banner height */
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Chat Container */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    max-width: 400px;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    color: #f2c718;
+    transform: translateY(-50px);
+    opacity: 0;
+    animation: slideUp 0.6s ease-out forwards;
+    z-index: 1; /* Ensure it sits above the banner */
+}
+
+/* Slide Up Animation */
+@keyframes slideUp {
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header Styling */
+header {
+    background-color: #000000;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+    animation: slideDown 0.6s ease-out forwards;
+}
+
+/* Slide Down Animation */
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* Header Text */
+header h1 {
+    font-size: 1.8em;
+    margin-bottom: 5px;
+    animation: fadeInText 1s ease-out forwards;
+}
+
+header p {
+    font-size: 0.9em;
+    animation: fadeInText 1s ease-out forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+    animation-fill-mode: forwards;
+}
+
+/* Fade In Text Animation */
+@keyframes fadeInText {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Chat Log Styling */
+.chat-log {
+    padding: 15px;
+    overflow-y: auto;
+    height: 400px;
+    border-top: 1px solid #333;
+    border-bottom: 1px solid #333;
+    background-color: #1a1a1a;
+    animation: fadeIn 1s ease-out forwards;
+    scroll-behavior: smooth; /* Smooth Scroll for Chat Log */
+}
+
+/* Message Styling */
+.chat-log .message {
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.95em;
+    line-height: 1.4;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: messageFadeIn 0.5s forwards;
+}
+
+/* Message Fade In Animation */
+@keyframes messageFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* User Message Styling */
+.user-message {
+    background-color: #f2c718;
+    color: #000;
+    text-align: right;
+    border-radius: 8px 8px 0 8px;
+    align-self: flex-end;
+    animation: slideInRight 0.5s ease-out forwards;
+}
+
+/* Bot Message Styling */
+.bot-message {
+    background-color: #333333;
+    color: #f2c718;
+    text-align: left;
+    border-radius: 8px 8px 8px 0;
+    align-self: flex-start;
+    animation: slideInLeft 0.5s ease-out forwards;
+}
+
+/* Slide In Right Animation */
+@keyframes slideInRight {
+    from { transform: translateX(50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Slide In Left Animation */
+@keyframes slideInLeft {
+    from { transform: translateX(-50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Input Area Styling */
+.input-area {
+    display: flex;
+    padding: 10px;
+    background-color: #000;
+    border-top: 1px solid #333;
+    animation: fadeIn 1s ease-out forwards;
+}
+
+input[type="text"] {
+    font-family: 'League Spartan', sans-serif;
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #333;
+    border-radius: 5px;
+    font-size: 1em;
+    background-color: #1a1a1a;
+    color: #f2c718;
+    margin-right: 10px;
+    transition: border 0.3s, background-color 0.3s;
+}
+
+input[type="text"]:focus {
+    border-color: #f2c718;
+    background-color: #262626;
+    outline: none;
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #000;
+    background-color: #f2c718;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    font-family: 'League Spartan', sans-serif;
+    position: relative; /* For ripple effect */
+    overflow: hidden; /* For ripple effect */
+}
+
+button::after,
+.tutorial-button::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+button:active,
+.tutorial-button:active {
+    opacity: 1;
+    transition: opacity 0.1s;
+}
+
+button:hover {
+    background-color: #d3ab15;
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Footer Styling */
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1a1a1a;
+    padding: 10px;
+    border-top: 1px solid #333;
+    animation: fadeIn 1s ease-out forwards;
+}
+
+footer p {
+    font-size: 0.85em;
+    color: #f2c718;
+}
+
+footer a {
+    color: #f2c718;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+footer a:hover {
+    color: #d3ab15;
+}
+
+/* Tutorial Button Styling */
+.tutorial-button {
+    background-color: #f2c718;
+    color: #000;
+    border: none;
+    padding: 8px 12px;
+    font-size: 0.8em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    font-family: 'League Spartan', sans-serif;
+    position: relative; /* For ripple effect */
+    overflow: hidden; /* For ripple effect */
+}
+
+.tutorial-button:hover {
+    background-color: #d3ab15;
+    transform: translateY(-2px);
+}
+
+.tutorial-button:active {
+    transform: translateY(0);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    animation: fadeInModal 0.3s forwards;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    color: #f2c718;
+    position: relative;
+    transform: scale(0.8);
+    opacity: 0;
+    animation: modalScaleIn 0.3s forwards;
+}
+
+@keyframes modalScaleIn {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    margin-bottom: 10px;
+    animation: fadeInText 0.5s forwards;
+}
+
+.modal-content p {
+    margin-bottom: 10px;
+    animation: fadeInText 0.5s 0.2s forwards;
+}
+
+.modal-content ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.modal-content ul li {
+    margin: 5px 0;
+    animation: fadeInText 0.5s 0.4s forwards;
+}
+
+.close {
+    color: #f2c718;
+    font-size: 1.5em;
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.close:hover {
+    color: #d3ab15;
+}
+
+/* Responsive Design */
+@media (max-width: 500px) {
+    /* Reduce padding-top in body to decrease space between banner and header */
+    body {
+        padding-top: 30px; /* Adjusted from 50px to 30px */
+        overflow-y: auto; /* Changed from hidden to auto */
+    }
+
+    /* Reduce the padding of the moving-banner for better fit */
+    .moving-banner {
+        padding: 5px 0; /* Adjusted from 10px 0 to 5px 0 */
+    }
+
+    /* Adjust chat-log height for smaller screens */
+    .chat-log {
+        height: 300px;
+    }
+
+    /* Adjust header font sizes for better fit */
+    header h1 {
+        font-size: 1.5em;
+    }
+
+    header p {
+        font-size: 0.8em;
+    }
+
+    /* Adjust input and button sizes */
+    input[type="text"] {
+        font-size: 0.9em;
+    }
+
+    button {
+        font-size: 0.9em;
+        padding: 8px 16px;
+    }
+
+    /* Adjust footer text size */
+    footer p {
+        font-size: 0.75em;
+    }
+
+    /* Adjust tutorial button size */
+    .tutorial-button {
+        padding: 6px 10px;
+        font-size: 0.7em;
+    }
+
+    /* Optional: Adjust the height of the chat-container to better fit mobile screens */
+    .chat-container {
+        height: calc(100vh - 80px); /* Adjust based on new padding and banner height */
+    }
+}
+
+/* Ensure the body doesn't overflow vertically on mobile devices */
+body {
+    overflow-y: auto; /* Changed from hidden to auto */
+}
+
+/* Scrollbar Styling */
+.chat-log::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-log::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.chat-log::-webkit-scrollbar-thumb {
+    background-color: #f2c718;
+    border-radius: 4px;
+}
+
+/* Button Ripple Effect */
+/* Ensured buttons have position relative and overflow hidden above */
+
+/* Additional Animations for Modal Content */
+.modal-content ul li {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Moving Banner Styling */
+.moving-banner {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #f2c718;
+    color: #000;
+    text-align: center;
+    padding: 10px 0;
+    font-family: 'League Spartan', sans-serif;
+    z-index: 1000; /* Ensure it stays on top */
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.moving-banner p {
+    display: inline-block;
+    animation: moveBanner 95s linear infinite; /* Increased duration for slower speed */
+    font-size: 1em;
+}
+
+.moving-banner a {
+    color: #000;
+    text-decoration: underline;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.moving-banner a:hover {
+    color: #d3ab15;
+}
+
+/* Move Banner Animation */
+@keyframes moveBanner {
+    0% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Microphone Button Styling */
+#mic-button {
+    background-color: #f2c718;
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+    margin-left: 5px;
+    position: relative; /* For ripple effect */
+    overflow: hidden; /* For ripple effect */
+}
+
+#mic-button::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+#mic-button:active::after {
+    opacity: 1;
+    transition: opacity 0.1s;
+}
+
+#mic-button:hover {
+    background-color: #d3ab15;
+    transform: translateY(-2px);
+}
+
+#mic-button:active {
+    transform: translateY(0);
+}
