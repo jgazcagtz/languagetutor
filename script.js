@@ -26,7 +26,7 @@ async function sendMessage(message = null) {
 
     try {
         // Send the message to the Vercel backend with updated language context and token limit
-        const response = await fetch('https://learnwgenglishtutor.vercel.app/api/chatbot', {
+        const response = await fetch('https://languagetutor.vercel.app/api/chatbot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
