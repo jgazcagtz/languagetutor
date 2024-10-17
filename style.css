@@ -386,31 +386,29 @@ footer a:hover {
         padding: 8px 16px;
     }
 
-    /* Remove footer text size adjustment to maintain original styling */
-    /* footer p {
-        font-size: 0.75em;
-    } */
-
     /* Adjust tutorial button size */
     .tutorial-button {
         padding: 6px 10px;
         font-size: 0.7em;
     }
 
-    /* Optional: Adjust the height of the chat-container to better fit mobile screens */
-    /* .chat-container {
-        height: calc(100vh - 80px); /* Adjust based on new padding and banner height */
-    /* } */
-
     /* **Footer Adjustments for Mobile** */
     footer {
-        flex-wrap: wrap; /* Allow footer items to wrap to the next line if necessary */
-        justify-content: center; /* Center items horizontally */
-        text-align: center; /* Center text within each item */
+        flex-direction: column; /* Stack items vertically */
+        align-items: center;    /* Center items horizontally */
+        gap: 10px;              /* Space between items */
     }
 
+    /* Ensure footer items are centered */
     footer p, footer a {
-        margin: 5px 0; /* Add vertical spacing between items */
+        margin: 0; /* Remove any default margins */
+        text-align: center;
+    }
+
+    /* Center the tutorial button */
+    .tutorial-button {
+        /* Optional: Ensure the button takes up minimal width */
+        width: auto;
     }
 }
 
