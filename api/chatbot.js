@@ -5,10 +5,10 @@ module.exports = async (req, res) => {
     }
 
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Ensure this environment variable is set securely
-    const { message, system_prompt, max_tokens } = req.body;
+    const { message, max_tokens } = req.body;
 
-    // Define default system prompt if not provided
-    const defaultSystemPrompt = 'You are a multilingual language tutor specializing in English, Spanish, French, German, and Portuguese. Answer questions about grammar, vocabulary, pronunciation, and language usage in these languages. Respond in the same language as the user\'s input, and adapt explanations for each language\'s nuances. Provide helpful examples and encourage the user to practice.';
+    // Define the system prompt
+    const systemPrompt = 'You are a multilingual language tutor specializing in English, Spanish, French, German, and Portuguese. Answer questions about grammar, vocabulary, pronunciation, and language usage in these languages. Respond in the same language as the user\'s input, and adapt explanations for each language\'s nuances. Provide helpful examples and encourage the user to practice.';
 
     // Define default max_tokens if not provided
     const defaultMaxTokens = 500;
@@ -32,7 +32,7 @@ module.exports = async (req, res) => {
                     messages: [
                         {
                             role: 'system',
-                            content: system_prompt || defaultSystemPrompt
+                            content: systemPrompt
                         },
                         { role: 'user', content: message }
                     ],
