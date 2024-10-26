@@ -1,70 +1,186 @@
-module.exports = async (req, res) => {
-    // Ensure the request method is POST
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed. Please use POST.' });
+// Function to open the tutorial modal 
+function openTutorial() {
+    document.getElementById('tutorial-modal').classList.add('show');
+}
+
+// Function to close the tutorial modal
+function closeTutorial() {
+    document.getElementById('tutorial-modal').classList.remove('show');
+}
+
+// Supported languages with their codes
+const supportedLanguages = {
+    'english': 'en-US',
+    'spanish': 'es-ES',
+    'french': 'fr-FR',
+    'german': 'de-DE',
+    'portuguese': 'pt-PT'
+};
+
+// Default selected language code
+let selectedLanguageCode = null;
+let languageSelected = false;
+
+// Function to send a message to the backend and display the response
+async function sendMessage(message = null) {
+    const userInputElement = document.getElementById('user-input');
+    const chatLog = document.getElementById('chat-log');
+    let userInput;
+
+    if (message) {
+        userInput = message;
+    } else {
+        userInput = userInputElement.value.trim();
+        if (!userInput) return; // Prevent sending empty messages
+        // Display the user's message
+        chatLog.innerHTML += `<div class="user-message message">${userInput}</div>`;
+        userInputElement.value = ''; // Clear input
     }
 
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Ensure this environment variable is set securely
-    const { message, system_prompt, max_tokens } = req.body;
-
-    // Basic validation
-    if (!message) {
-        return res.status(400).json({ error: 'Message field is required.' });
+    if (!languageSelected) {
+        // Determine the language from the user's input
+        const lowerCaseInput = userInput.toLowerCase();
+        if (supportedLanguages[lowerCaseInput]) {
+            selectedLanguageCode = supportedLanguages[lowerCaseInput];
+            languageSelected = true;
+            // Set the recognition language
+            if (recognition) {
+                recognition.lang = selectedLanguageCode;
+            }
+            // Acknowledge the selected language
+            const confirmationMessage = `You have selected ${lowerCaseInput}. How can I assist you in ${lowerCaseInput}?`;
+            chatLog.innerHTML += `<div class="bot-message message">${confirmationMessage}</div>`;
+            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
+            speakText(confirmationMessage);
+        } else {
+            // If the input is not a recognized language, ask again
+            const promptMessage = "Which language would you like to use? Please choose from English, Spanish, French, German, or Portuguese.";
+            chatLog.innerHTML += `<div class="bot-message message">${promptMessage}</div>`;
+            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
+            speakText(promptMessage);
+        }
+        return;
     }
-
-    // Define default system prompt if not provided
-    const defaultSystemPrompt = 'You are an AI English tutor. Your role is to help users improve their English language skills by providing clear explanations, examples, and guidance on grammar, vocabulary, pronunciation, and conversation practice. Use simple language, offer detailed answers when asked about grammar or word usage, and encourage users to practice by asking follow-up questions. Correct any language mistakes politely and provide helpful feedback for learning.';
-
-    // Define default max_tokens if not provided
-    const defaultMaxTokens = 200;
 
     try {
-        // Make a request to OpenAI API using the native fetch API
-        const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Send the message to the backend with the system prompt
+        const response = await fetch('https://languagetutor.vercel.app/api/chatbot', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENAI_API_KEY}`
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo', // Keeping the original model as per your request
-                messages: [
-                    {
-                        role: 'system',
-                        content: system_prompt || defaultSystemPrompt
-                    },
-                    { role: 'user', content: message }
-                ],
-                max_tokens: max_tokens || defaultMaxTokens,
-                temperature: 0.7, // Adjust temperature for response creativity
-                top_p: 1,
-                frequency_penalty: 0,
-                presence_penalty: 0
+                message: userInput,
+                system_prompt: "You are a multilingual language tutor specializing in English, Spanish, French, German, and Portuguese. Answer questions about grammar, vocabulary, pronunciation, and language usage in these languages. Respond in the same language as the user's input, and adapt explanations for each language's nuances.",
+                max_tokens: 200 // Set a token limit for each response
             })
         });
+        const data = await response.json();
 
-        // Check if the response is OK
-        if (!openAIResponse.ok) {
-            const errorData = await openAIResponse.json();
-            console.error('OpenAI API Error:', errorData);
-            return res.status(openAIResponse.status).json({ error: errorData.error.message || 'Error from OpenAI API' });
-        }
+        // Display the bot's response
+        chatLog.innerHTML += `<div class="bot-message message">${data.response}</div>`;
+        chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
 
-        // Parse the response from OpenAI
-        const data = await openAIResponse.json();
-
-        // Ensure the response structure is as expected
-        if (!data.choices || !data.choices.length) {
-            console.error('Unexpected OpenAI API response:', data);
-            return res.status(500).json({ error: 'Unexpected response from OpenAI API' });
-        }
-
-        const botMessage = data.choices[0].message.content.trim();
-
-        // Send bot's response back to the frontend
-        res.status(200).json({ response: botMessage });
+        // Speak the bot's response
+        speakText(data.response);
     } catch (error) {
-        console.error('Error in chatbot function:', error);
-        res.status(500).json({ error: 'Error processing request' });
+        console.error('Error:', error);
+        chatLog.innerHTML += `<div class="bot-message message">Error connecting to the server. Please try again later.</div>`;
+        chatLog.scrollTop = chatLog.scrollHeight;
+        speakText("Error connecting to the server. Please try again later.");
     }
-};
+}
+
+// Voice Recognition Setup
+let recognition;
+let recognizing = false;
+
+// Check for browser support
+if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    alert("Your browser does not support Speech Recognition. Please use a compatible browser like Chrome.");
+} else {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'en-US'; // Default language, will be updated after language selection
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+        recognizing = true;
+        document.getElementById('mic-button').textContent = '🛑'; // Change icon to stop
+    };
+
+    recognition.onend = () => {
+        recognizing = false;
+        document.getElementById('mic-button').textContent = '🎤'; // Change icon back to mic
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        sendMessage(transcript);
+    };
+
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        recognizing = false;
+        document.getElementById('mic-button').textContent = '🎤'; // Change icon back to mic
+    };
+}
+
+// Function to toggle voice recognition
+function toggleVoiceRecognition() {
+    if (recognizing) {
+        recognition.stop();
+        return;
+    }
+    if (languageSelected && recognition) {
+        recognition.lang = selectedLanguageCode; // Ensure recognition language is up to date
+    }
+    recognition.start();
+}
+
+// Speech Synthesis Function
+function speakText(text) {
+    if (!('speechSynthesis' in window)) {
+        console.warn("Your browser does not support Speech Synthesis.");
+        return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Set the voice based on the selected language
+    const voices = speechSynthesis.getVoices();
+
+    // In case voices are not yet loaded, wait for them
+    if (voices.length === 0) {
+        speechSynthesis.onvoiceschanged = () => {
+            const voices = speechSynthesis.getVoices();
+            setVoice(utterance, voices);
+            speechSynthesis.speak(utterance);
+        };
+    } else {
+        setVoice(utterance, voices);
+        speechSynthesis.speak(utterance);
+    }
+}
+
+function setVoice(utterance, voices) {
+    if (!selectedLanguageCode) {
+        // Default to US English
+        selectedLanguageCode = 'en-US';
+    }
+    // Try to find a voice that matches the selected language code
+    let selectedVoice = voices.find(voice => voice.lang === selectedLanguageCode);
+
+    // If exact match not found, try to find a voice that starts with the language code (e.g., 'en' for 'en-US', 'en-GB')
+    if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.lang.startsWith(selectedLanguageCode.split('-')[0]));
+    }
+
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+    } else {
+        console.warn(`No voice found for language code ${selectedLanguageCode}. Using default voice.`);
+    }
+}
+
+// Function to set the current year in the footer (redundant if set in HTML script)
+document.getElementById('year').textContent = new Date().getFullYear();
