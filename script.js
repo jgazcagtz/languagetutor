@@ -63,17 +63,20 @@ async function sendMessage(message = null) {
     }
 
     try {
-        // Send the message to the backend with the system prompt
+        // Send the message to the backend
         const response = await fetch('https://languagetutor.vercel.app/api/chatbot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 message: userInput,
-                system_prompt: "You are a multilingual language tutor specializing in English, Spanish, French, German, and Portuguese. Answer questions about grammar, vocabulary, pronunciation, and language usage in these languages. Respond in the same language as the user's input, and adapt explanations for each language's nuances.",
                 max_tokens: 200 // Set a token limit for each response
             })
         });
         const data = await response.json();
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
 
         // Display the bot's response
         chatLog.innerHTML += `<div class="bot-message message">${data.response}</div>`;
@@ -83,9 +86,10 @@ async function sendMessage(message = null) {
         speakText(data.response);
     } catch (error) {
         console.error('Error:', error);
-        chatLog.innerHTML += `<div class="bot-message message">Error connecting to the server. Please try again later.</div>`;
+        const errorMessage = 'Error connecting to the server. Please try again later.';
+        chatLog.innerHTML += `<div class="bot-message message">${errorMessage}</div>`;
         chatLog.scrollTop = chatLog.scrollHeight;
-        speakText("Error connecting to the server. Please try again later.");
+        speakText(errorMessage);
     }
 }
 
@@ -152,27 +156,34 @@ function speakText(text) {
     // In case voices are not yet loaded, wait for them
     if (voices.length === 0) {
         speechSynthesis.onvoiceschanged = () => {
-            const voices = speechSynthesis.getVoices();
-            setVoice(utterance, voices);
+            setVoice(utterance);
             speechSynthesis.speak(utterance);
         };
     } else {
-        setVoice(utterance, voices);
+        setVoice(utterance);
         speechSynthesis.speak(utterance);
     }
 }
 
-function setVoice(utterance, voices) {
+function setVoice(utterance) {
+    const voices = speechSynthesis.getVoices();
+
     if (!selectedLanguageCode) {
         // Default to US English
         selectedLanguageCode = 'en-US';
     }
+
     // Try to find a voice that matches the selected language code
     let selectedVoice = voices.find(voice => voice.lang === selectedLanguageCode);
 
     // If exact match not found, try to find a voice that starts with the language code (e.g., 'en' for 'en-US', 'en-GB')
     if (!selectedVoice) {
         selectedVoice = voices.find(voice => voice.lang.startsWith(selectedLanguageCode.split('-')[0]));
+    }
+
+    // If still not found, try to find a default voice for the language
+    if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.lang === 'en-US'); // Fallback to English
     }
 
     if (selectedVoice) {
@@ -182,5 +193,5 @@ function setVoice(utterance, voices) {
     }
 }
 
-// Function to set the current year in the footer (redundant if set in HTML script)
+// Function to set the current year in the footer
 document.getElementById('year').textContent = new Date().getFullYear();
