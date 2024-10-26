@@ -8,6 +8,19 @@ function closeTutorial() {
     document.getElementById('tutorial-modal').classList.remove('show');
 }
 
+// Supported languages with their codes
+const supportedLanguages = {
+    'english': 'en-US',
+    'spanish': 'es-ES',
+    'french': 'fr-FR',
+    'german': 'de-DE',
+    'portuguese': 'pt-PT'
+};
+
+// Default selected language code
+let selectedLanguageCode = null;
+let languageSelected = false;
+
 // Function to send a message to the backend and display the response
 async function sendMessage(message = null) {
     const userInputElement = document.getElementById('user-input');
@@ -24,8 +37,33 @@ async function sendMessage(message = null) {
         userInputElement.value = ''; // Clear input
     }
 
+    if (!languageSelected) {
+        // Determine the language from the user's input
+        const lowerCaseInput = userInput.toLowerCase();
+        if (supportedLanguages[lowerCaseInput]) {
+            selectedLanguageCode = supportedLanguages[lowerCaseInput];
+            languageSelected = true;
+            // Set the recognition language
+            if (recognition) {
+                recognition.lang = selectedLanguageCode;
+            }
+            // Acknowledge the selected language
+            const confirmationMessage = `You have selected ${lowerCaseInput}. How can I assist you in ${lowerCaseInput}?`;
+            chatLog.innerHTML += `<div class="bot-message message">${confirmationMessage}</div>`;
+            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
+            speakText(confirmationMessage);
+        } else {
+            // If the input is not a recognized language, ask again
+            const promptMessage = "Which language would you like to use? Please choose from English, Spanish, French, German, or Portuguese.";
+            chatLog.innerHTML += `<div class="bot-message message">${promptMessage}</div>`;
+            chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the bottom
+            speakText(promptMessage);
+        }
+        return;
+    }
+
     try {
-        // Send the message to the Vercel backend with updated language context and token limit
+        // Send the message to the backend with the system prompt
         const response = await fetch('https://languagetutor.vercel.app/api/chatbot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -61,7 +99,7 @@ if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) 
 } else {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SpeechRecognition();
-    recognition.lang = 'en-US'; // You can set this dynamically based on user preference
+    recognition.lang = 'en-US'; // Default language, will be updated after language selection
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
@@ -93,6 +131,9 @@ function toggleVoiceRecognition() {
         recognition.stop();
         return;
     }
+    if (languageSelected && recognition) {
+        recognition.lang = selectedLanguageCode; // Ensure recognition language is up to date
+    }
     recognition.start();
 }
 
@@ -104,12 +145,42 @@ function speakText(text) {
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
-    // Optionally, set the voice based on user's language preference
-    // For example, you can detect the language from the text or let the user select
-    // Here, we'll use the default voice
-    speechSynthesis.speak(utterance);
+
+    // Set the voice based on the selected language
+    const voices = speechSynthesis.getVoices();
+
+    // In case voices are not yet loaded, wait for them
+    if (voices.length === 0) {
+        speechSynthesis.onvoiceschanged = () => {
+            const voices = speechSynthesis.getVoices();
+            setVoice(utterance, voices);
+            speechSynthesis.speak(utterance);
+        };
+    } else {
+        setVoice(utterance, voices);
+        speechSynthesis.speak(utterance);
+    }
+}
+
+function setVoice(utterance, voices) {
+    if (!selectedLanguageCode) {
+        // Default to US English
+        selectedLanguageCode = 'en-US';
+    }
+    // Try to find a voice that matches the selected language code
+    let selectedVoice = voices.find(voice => voice.lang === selectedLanguageCode);
+
+    // If exact match not found, try to find a voice that starts with the language code (e.g., 'en' for 'en-US', 'en-GB')
+    if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.lang.startsWith(selectedLanguageCode.split('-')[0]));
+    }
+
+    if (selectedVoice) {
+        utterance.voice = selectedVoice;
+    } else {
+        console.warn(`No voice found for language code ${selectedLanguageCode}. Using default voice.`);
+    }
 }
 
 // Function to set the current year in the footer (redundant if set in HTML script)
 document.getElementById('year').textContent = new Date().getFullYear();
-
