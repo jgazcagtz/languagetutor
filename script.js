@@ -75,7 +75,6 @@ async function sendMessage(message = null) {
     const userInputElement = document.getElementById('user-input');
     const micButton = document.getElementById('mic-button');
     const sendButton = document.getElementById('send-button');
-    const chatLog = document.getElementById('chat-log');
 
     // Disable input and buttons during processing
     userInputElement.disabled = true;
