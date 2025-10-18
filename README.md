@@ -1,10 +1,17 @@
 # 🌍 Language Tutor™ - AI-Powered Language Learning
 
-A state-of-the-art language learning application powered by GPT-4, featuring modern UI/UX design, multiple learning modes, and intelligent conversation management.
+A state-of-the-art language learning application powered by GPT-4, featuring modern UI/UX design, multiple learning modes, intelligent conversation management, and professional OpenAI voices.
 
-![Language Tutor](https://img.shields.io/badge/Version-2.0-purple)
+![Language Tutor](https://img.shields.io/badge/Version-2.1-purple)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![AI](https://img.shields.io/badge/Powered%20by-GPT--4-green)
+
+## 🚀 Quick Start
+
+1. **Landing Page**: Open `landing.html` - Beautiful landing page with guided tutorial
+2. **Main App**: Open `index.html` - Jump straight to the language tutor app
+
+The landing page provides an interactive onboarding experience!
 
 ## 🚀 Features
 
@@ -142,6 +149,7 @@ The application is fully responsive and optimized for:
 
 ### Mobile Optimizations
 - **Collapsible sidebar** navigation with smooth animations
+- **Swipe gestures** - Swipe right to open, left to close sidebar
 - **Touch-optimized controls** with larger tap targets
 - **Adaptive input area** - stacked voice controls on mobile
 - **Optimized footer** - vertical layout for better readability
@@ -152,6 +160,7 @@ The application is fully responsive and optimized for:
 - **Adaptive typography** - scaled down for smaller screens
 - **Optimized spacing** - reduced padding for mobile
 - **Voice panel mobile layout** - stacked controls
+- **Haptic feedback** - Vibration on key interactions
 
 ## 🎨 Design System
 
@@ -214,9 +223,16 @@ Success Gradient: #43e97b → #38f9d7 (Green)
    ```
 
 3. **Open in browser**
-   ```
-   http://localhost:3000
-   ```
+   - Landing page: `http://localhost:3000/landing.html`
+   - Main app: `http://localhost:3000/index.html`
+
+### Quick Test (No Server Needed)
+
+You can also open the HTML files directly in your browser:
+- `landing.html` - For the landing page experience
+- `index.html` - For direct access to the app
+
+Note: For full functionality (OpenAI TTS), you'll need to deploy to Vercel or run locally with environment variables.
 
 ## 📖 Usage Guide
 
@@ -260,6 +276,12 @@ Success Gradient: #43e97b → #38f9d7 (Green)
 - `Enter`: Send message
 - `Ctrl+Space`: Start/stop voice recording
 - `Escape`: Cancel voice recording
+
+#### Mobile Gestures
+- **Swipe right** from left edge: Open sidebar
+- **Swipe left** on sidebar: Close sidebar
+- **Tap outside** sidebar: Close sidebar
+- **Long press** ready for future features
 
 ### Tips for Best Results
 - Be specific with your questions
@@ -320,12 +342,21 @@ Modify CSS variables in `style.css`:
 
 ## 🌟 Key Improvements Over Previous Version
 
-### Latest Updates (V2.1)
+### Latest Updates (V2.1.1)
+- ✅ **Landing Page** - Stunning landing page with CTA
+- ✅ **Interactive Tutorial** - 4-step guided onboarding
+- ✅ **Fixed OpenAI TTS** - Prevents fallback to browser voices
+- ✅ **Fixed Language Selection** - No double prompts
+- ✅ **Better Error Handling** - Toast notifications for voice issues
+
+### Previous Updates (V2.1)
 - ✅ **Teaching Studio Mode** - Complete educator toolkit
 - ✅ **Mobile Responsive Input** - Optimized typing area for mobile
 - ✅ **Smart Conversation Starters** - Adapts to student/teacher mode
 - ✅ **Mode-Specific Badge** - "NEW" indicator for Teaching Studio
 - ✅ **Enhanced Mobile UX** - Stacked controls, better spacing
+- ✅ **Donate Button** - Animated Buy Me a Coffee integration
+- ✅ **Advanced Animations** - Touch ripples, particles, confetti
 
 ### Visual Enhancements
 - ✅ Complete UI redesign with modern aesthetics

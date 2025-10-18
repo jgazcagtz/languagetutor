@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Language Tutor™ - AI-Powered Language Learning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="landing.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="landing-background">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="stars"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Language Tutor</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#languages">Languages</a>
+                <a href="https://buymeacoffee.com/georgegeorge" target="_blank" class="donate-link">
+                    <i class="fas fa-coffee"></i> Donate
+                </a>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobile-menu">
+        <button class="close-menu" onclick="toggleMobileMenu()">
+            <i class="fas fa-times"></i>
+        </button>
+        <a href="#features" onclick="toggleMobileMenu()">Features</a>
+        <a href="#how-it-works" onclick="toggleMobileMenu()">How It Works</a>
+        <a href="#languages" onclick="toggleMobileMenu()">Languages</a>
+        <a href="https://buymeacoffee.com/georgegeorge" target="_blank" class="donate-link">
+            <i class="fas fa-coffee"></i> Support Us
+        </a>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                Powered by GPT-4 & OpenAI TTS
+            </div>
+            <h1 class="hero-title">
+                Master Languages with
+                <span class="gradient-text">AI-Powered</span>
+                <br>Conversation Practice
+            </h1>
+            <p class="hero-subtitle">
+                Your personal AI language tutor with natural voices, real-time feedback, 
+                and 5 specialized learning modes. Learn English, Spanish, French, German, or Portuguese.
+            </p>
+            <div class="hero-buttons">
+                <button class="cta-primary" onclick="startTutorial()">
+                    <span>Start Learning Free</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="cta-secondary" onclick="scrollToSection('how-it-works')">
+                    <i class="fas fa-play-circle"></i>
+                    <span>See How It Works</span>
+                </button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-number">5</span>
+                    <span class="stat-label">Languages</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">6</span>
+                    <span class="stat-label">AI Voices</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">∞</span>
+                    <span class="stat-label">Practice Time</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="app-preview">
+                <div class="app-window">
+                    <div class="window-header">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <div class="window-content">
+                        <div class="demo-chat">
+                            <div class="demo-message bot">
+                                <div class="avatar">🤖</div>
+                                <div class="bubble">¡Hola! Let's practice Spanish together!</div>
+                            </div>
+                            <div class="demo-message user">
+                                <div class="bubble">How do I say "I love learning languages"?</div>
+                                <div class="avatar">👤</div>
+                            </div>
+                            <div class="demo-message bot">
+                                <div class="avatar">🤖</div>
+                                <div class="bubble">Perfect question! You say: "Me encanta aprender idiomas"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="floating-icons">
+                    <div class="float-icon" style="--delay: 0s;">🇬🇧</div>
+                    <div class="float-icon" style="--delay: 0.5s;">🇪🇸</div>
+                    <div class="float-icon" style="--delay: 1s;">🇫🇷</div>
+                    <div class="float-icon" style="--delay: 1.5s;">🇩🇪</div>
+                    <div class="float-icon" style="--delay: 2s;">🇵🇹</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="section-header">
+            <h2>Why Choose Language Tutor?</h2>
+            <p>State-of-the-art AI technology meets intuitive design</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-microphone-alt"></i>
+                </div>
+                <h3>Natural AI Voices</h3>
+                <p>6 professional OpenAI voices with perfect pronunciation and natural intonation</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>Smart Learning Modes</h3>
+                <p>Conversation, Grammar, Vocabulary, Practice, Assessment & Teaching Studio</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-waveform"></i>
+                </div>
+                <h3>Real-Time Visualization</h3>
+                <p>See your voice input with beautiful waveform animations</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <h3>Context Memory</h3>
+                <p>AI remembers your entire conversation for personalized responses</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Mobile Optimized</h3>
+                <p>Perfect experience on phones, tablets, and desktops</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h3>Teaching Studio</h3>
+                <p>Educators get lesson plans, exercises, and teaching strategies</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="section-header">
+            <h2>Get Started in 3 Simple Steps</h2>
+            <p>Start speaking a new language in minutes</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3>Choose Your Language</h3>
+                    <p>Select from English, Spanish, French, German, or Portuguese</p>
+                </div>
+            </div>
+            <div class="step-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3>Pick a Learning Mode</h3>
+                    <p>Choose the mode that fits your goals - from conversation to assessment</p>
+                </div>
+            </div>
+            <div class="step-arrow">
+                <i class="fas fa-arrow-right"></i>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3>Start Learning!</h3>
+                    <p>Type or speak your questions and get instant AI-powered responses</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Languages Section -->
+    <section id="languages" class="languages">
+        <div class="section-header">
+            <h2>Supported Languages</h2>
+            <p>Master any of these languages with native-quality pronunciation</p>
+        </div>
+        <div class="languages-grid">
+            <div class="language-card">
+                <div class="language-flag">🇬🇧</div>
+                <h3>English</h3>
+                <p>Voice: Nova - Warm & friendly</p>
+            </div>
+            <div class="language-card">
+                <div class="language-flag">🇪🇸</div>
+                <h3>Spanish</h3>
+                <p>Voice: Shimmer - Clear & articulate</p>
+            </div>
+            <div class="language-card">
+                <div class="language-flag">🇫🇷</div>
+                <h3>French</h3>
+                <p>Voice: Alloy - Neutral & professional</p>
+            </div>
+            <div class="language-card">
+                <div class="language-flag">🇩🇪</div>
+                <h3>German</h3>
+                <p>Voice: Echo - Clear male voice</p>
+            </div>
+            <div class="language-card">
+                <div class="language-flag">🇵🇹</div>
+                <h3>Portuguese</h3>
+                <p>Voice: Fable - Expressive & engaging</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Ready to Transform Your Language Learning?</h2>
+            <p>Join thousands of learners using AI to master new languages</p>
+            <button class="cta-primary large" onclick="startTutorial()">
+                <span>Launch Language Tutor</span>
+                <i class="fas fa-rocket"></i>
+            </button>
+            <p class="cta-note">Free forever • No sign-up required • Start immediately</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Language Tutor</span>
+                </div>
+                <p>AI-powered language learning for everyone</p>
+            </div>
+            <div class="footer-section">
+                <h4>Features</h4>
+                <a href="#features">Learning Modes</a>
+                <a href="#languages">Languages</a>
+                <a href="index.html">Try Now</a>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <a href="https://buymeacoffee.com/georgegeorge" target="_blank">Buy Me a Coffee</a>
+                <a href="https://learnwg.vercel.app/" target="_blank">LearnWG</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Language Tutor. Powered by OpenAI GPT-4 & TTS-1-HD</p>
+        </div>
+    </footer>
+
+    <!-- Guided Tutorial Overlay -->
+    <div id="tutorial-overlay" class="tutorial-overlay">
+        <div class="tutorial-content">
+            <div class="tutorial-step" id="step-1">
+                <div class="tutorial-header">
+                    <h2>Welcome to Language Tutor! 🎉</h2>
+                    <button class="skip-tutorial" onclick="skipTutorial()">Skip Tutorial</button>
+                </div>
+                <div class="tutorial-body">
+                    <div class="tutorial-visual">
+                        <i class="fas fa-rocket" style="font-size: 80px; color: #667eea;"></i>
+                    </div>
+                    <p>Let's take a quick 30-second tour to show you around!</p>
+                    <p class="tutorial-subtitle">You'll learn how to start speaking a new language in minutes.</p>
+                </div>
+                <div class="tutorial-footer">
+                    <button class="tutorial-btn secondary" onclick="skipTutorial()">Skip</button>
+                    <button class="tutorial-btn primary" onclick="nextStep(2)">
+                        Let's Go! <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tutorial-step hidden" id="step-2">
+                <div class="tutorial-header">
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 25%"></div>
+                        </div>
+                        <span>Step 1 of 4</span>
+                    </div>
+                </div>
+                <div class="tutorial-body">
+                    <div class="tutorial-visual">
+                        <div class="language-preview">
+                            🇬🇧 🇪🇸 🇫🇷 🇩🇪 🇵🇹
+                        </div>
+                    </div>
+                    <h3>Choose Your Language</h3>
+                    <p>Select from 5 languages: English, Spanish, French, German, or Portuguese.</p>
+                    <p class="tutorial-tip"><i class="fas fa-lightbulb"></i> Each language has a native-quality AI voice!</p>
+                </div>
+                <div class="tutorial-footer">
+                    <button class="tutorial-btn secondary" onclick="prevStep(1)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="tutorial-btn primary" onclick="nextStep(3)">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tutorial-step hidden" id="step-3">
+                <div class="tutorial-header">
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 50%"></div>
+                        </div>
+                        <span>Step 2 of 4</span>
+                    </div>
+                </div>
+                <div class="tutorial-body">
+                    <div class="tutorial-visual">
+                        <div class="modes-preview">
+                            <div class="mode-icon"><i class="fas fa-comments"></i></div>
+                            <div class="mode-icon"><i class="fas fa-book"></i></div>
+                            <div class="mode-icon"><i class="fas fa-dumbbell"></i></div>
+                        </div>
+                    </div>
+                    <h3>Pick Your Learning Mode</h3>
+                    <p>6 specialized modes: Conversation, Grammar, Vocabulary, Practice, Assessment, and Teaching Studio.</p>
+                    <p class="tutorial-tip"><i class="fas fa-lightbulb"></i> Start with Conversation mode for natural practice!</p>
+                </div>
+                <div class="tutorial-footer">
+                    <button class="tutorial-btn secondary" onclick="prevStep(2)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="tutorial-btn primary" onclick="nextStep(4)">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tutorial-step hidden" id="step-4">
+                <div class="tutorial-header">
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                        <span>Step 3 of 4</span>
+                    </div>
+                </div>
+                <div class="tutorial-body">
+                    <div class="tutorial-visual">
+                        <div class="voice-preview">
+                            <i class="fas fa-microphone" style="font-size: 60px; color: #f093fb;"></i>
+                            <div class="wave-animation">
+                                <span></span><span></span><span></span><span></span><span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <h3>Use Voice or Text</h3>
+                    <p>Type your questions or use the microphone button to speak naturally.</p>
+                    <p class="tutorial-tip"><i class="fas fa-lightbulb"></i> Press Ctrl+Space for quick voice input!</p>
+                </div>
+                <div class="tutorial-footer">
+                    <button class="tutorial-btn secondary" onclick="prevStep(3)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="tutorial-btn primary" onclick="nextStep(5)">
+                        Next <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="tutorial-step hidden" id="step-5">
+                <div class="tutorial-header">
+                    <div class="tutorial-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 100%"></div>
+                        </div>
+                        <span>Step 4 of 4</span>
+                    </div>
+                </div>
+                <div class="tutorial-body">
+                    <div class="tutorial-visual">
+                        <div class="success-icon">
+                            <i class="fas fa-check-circle" style="font-size: 80px; color: #43e97b;"></i>
+                        </div>
+                    </div>
+                    <h3>You're All Set! 🎉</h3>
+                    <p>That's it! Now you're ready to start learning. The AI will remember your conversation and adapt to your level.</p>
+                    <p class="tutorial-highlight">
+                        <strong>Pro tip:</strong> Use conversation starters for quick inspiration!
+                    </p>
+                </div>
+                <div class="tutorial-footer">
+                    <button class="tutorial-btn secondary" onclick="prevStep(4)">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="tutorial-btn primary" onclick="launchApp()">
+                        Launch App <i class="fas fa-rocket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="landing.js"></script>
+</body>
+</html>
+

@@ -237,14 +237,18 @@ function selectLanguage(langCode, langName) {
     // Clear previous conversation when switching languages
     if (state.conversationHistory.length > 0) {
         if (confirm('Switching languages will clear your current conversation. Continue?')) {
-            clearChat();
+            state.conversationHistory = [];
+            document.getElementById('chat-log').innerHTML = '';
         } else {
             return;
         }
     }
 
-    // Show initial greeting
-    addBotMessage(`Great! Let's learn ${langName} together. How can I help you today?`);
+    // Show initial greeting ONLY if chat is empty
+    const chatLog = document.getElementById('chat-log');
+    if (chatLog.children.length === 0) {
+        addBotMessage(`Great! Let's learn ${langName} together. How can I help you today?`);
+    }
 }
 
 function showConversationStarters() {
@@ -1351,5 +1355,41 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('button, .language-btn, .action-btn').forEach(button => {
         button.classList.add('touch-ripple');
     });
+    
+    // Setup swipe gestures for mobile sidebar
+    setupSwipeGestures();
 });
+
+// ==================== SWIPE GESTURES FOR MOBILE ====================
+function setupSwipeGestures() {
+    const sidebar = document.getElementById('sidebar');
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+    });
+    
+    document.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+    
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const swipeDistance = touchEndX - touchStartX;
+        
+        // Swipe right to open sidebar (from left edge)
+        if (swipeDistance > swipeThreshold && touchStartX < 50) {
+            sidebar.classList.add('active');
+            triggerHaptic('light');
+        }
+        
+        // Swipe left to close sidebar
+        if (swipeDistance < -swipeThreshold && sidebar.classList.contains('active')) {
+            sidebar.classList.remove('active');
+            triggerHaptic('light');
+        }
+    }
+}
 
