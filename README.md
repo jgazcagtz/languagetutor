@@ -43,6 +43,19 @@ A state-of-the-art language learning application powered by GPT-4, featuring mod
    - CEFR level estimation (A1-C2)
    - Personalized recommendations
 
+6. **Teaching Studio** 👨‍🏫 *NEW!*
+   - **For Language Educators & Teachers**
+   - Generate comprehensive lesson plans
+   - Create custom exercises and worksheets
+   - Get teaching methodology tips
+   - Access cultural context information
+   - Identify common student mistakes
+   - Receive pronunciation teaching guides
+   - Plan differentiated instruction
+   - Generate classroom activities
+   - Professional teaching strategies
+   - Language-specific conversation starters for educators
+
 ### 🎤 Advanced Voice Features
 
 #### Voice Recognition
@@ -54,14 +67,16 @@ A state-of-the-art language learning application powered by GPT-4, featuring mod
 - **Multi-language Support**: Automatic language switching
 - **Error Handling**: Clear feedback for recognition issues
 
-#### Text-to-Speech Controls
-- **Voice Selection**: Choose from 100+ system voices
-- **Speech Rate**: Adjustable from 0.5x to 2x speed
-- **Pitch Control**: Customize voice pitch (0.5 to 2.0)
+#### OpenAI Text-to-Speech (Premium Quality)
+- **Natural AI Voices**: 6 professional voices powered by OpenAI TTS-1-HD
+- **Voice Selection**: Choose from Nova, Shimmer, Alloy, Echo, Fable, or Onyx
+- **Auto Mode**: Intelligently selects the best voice for your learning language
+- **Speech Rate**: Adjustable from 0.5x to 2x speed (default: 0.95x for learning)
 - **Volume Control**: Fine-tune audio output
+- **Smart Caching**: Audio responses cached for instant replay
 - **Auto-play Responses**: Optional automatic voice responses
 - **Voice Notifications**: Audio feedback for actions
-- **Language-specific Voices**: Auto-select appropriate accent
+- **Fallback Support**: Graceful fallback to browser TTS if needed
 
 #### Professional Recording Interface
 - **Animated Recording Panel**: Sleek UI when listening
@@ -111,9 +126,12 @@ A state-of-the-art language learning application powered by GPT-4, featuring mod
 - **Vercel**: Serverless deployment platform
 
 ### APIs & Services
-- **Web Speech API**: Voice recognition and synthesis
-- **LocalStorage API**: Conversation persistence
-- **OpenAI API**: GPT-4 chat completions
+- **Web Speech API**: Voice recognition for input
+- **OpenAI GPT-4 API**: Advanced chat completions with context
+- **OpenAI TTS API**: Premium text-to-speech (TTS-1-HD model)
+- **LocalStorage API**: Conversation and settings persistence
+- **Web Audio API**: Real-time audio visualization
+- **MediaStream API**: Microphone access for waveform display
 
 ## 📱 Responsive Design
 
@@ -122,11 +140,18 @@ The application is fully responsive and optimized for:
 - 📱 **Tablet**: 641px - 968px  
 - 💻 **Desktop**: 969px and above
 
-### Mobile Features
-- Collapsible sidebar navigation
-- Touch-optimized controls
-- Adaptive layout and typography
-- Optimized conversation starters grid
+### Mobile Optimizations
+- **Collapsible sidebar** navigation with smooth animations
+- **Touch-optimized controls** with larger tap targets
+- **Adaptive input area** - stacked voice controls on mobile
+- **Optimized footer** - vertical layout for better readability
+- **Smaller button sizes** for mobile (40px vs 44px)
+- **Compact mode indicator** with adjusted font sizes
+- **Full-width recording buttons** for easy touch access
+- **Responsive conversation starters** - single column grid
+- **Adaptive typography** - scaled down for smaller screens
+- **Optimized spacing** - reduced padding for mobile
+- **Voice panel mobile layout** - stacked controls
 
 ## 🎨 Design System
 
@@ -218,12 +243,18 @@ Success Gradient: #43e97b → #38f9d7 (Green)
 
 #### Voice Settings
 1. Click the sliders icon to open voice settings
-2. **Choose Your Voice**: Select from available system voices
-3. **Adjust Speed**: Slow down or speed up responses (0.5x - 2x)
-4. **Change Pitch**: Make voice higher or lower pitched
-5. **Set Volume**: Control audio output level
-6. **Test Voice**: Preview your settings with sample text
-7. **Enable Features**: Toggle auto-play, continuous mode, notifications
+2. **Choose Your Voice**: Select from 6 OpenAI AI voices:
+   - **Auto**: Automatically selects best voice for your language
+   - **Nova**: Warm, friendly female - excellent for teaching
+   - **Shimmer**: Clear, articulate female - great for pronunciation
+   - **Alloy**: Neutral, balanced - professional tutor style
+   - **Echo**: Clear male - good for deeper tones
+   - **Fable**: Expressive British - engaging storyteller
+   - **Onyx**: Deep, authoritative male - formal instruction
+3. **Adjust Speed**: 0.5x (slow) to 2x (fast) - default 0.95x for learning
+4. **Set Volume**: Control audio output level (0-100%)
+5. **Test Voice**: Preview with natural language-specific sample
+6. **Enable Features**: Auto-play, continuous mode, voice notifications
 
 #### Keyboard Shortcuts
 - `Enter`: Send message
@@ -268,11 +299,12 @@ Access settings via the gear icon in the header:
 
 ### Voice Settings Storage
 All voice preferences are saved to localStorage:
-- Speech rate, pitch, and volume
-- Selected voice preference
+- Speech rate and volume
+- Selected OpenAI voice (auto, nova, shimmer, alloy, echo, fable, onyx)
 - Continuous listening state
 - Auto-play preferences
 - Voice notification settings
+- Audio cache for instant playback
 
 ### Customization
 
@@ -288,6 +320,13 @@ Modify CSS variables in `style.css`:
 
 ## 🌟 Key Improvements Over Previous Version
 
+### Latest Updates (V2.1)
+- ✅ **Teaching Studio Mode** - Complete educator toolkit
+- ✅ **Mobile Responsive Input** - Optimized typing area for mobile
+- ✅ **Smart Conversation Starters** - Adapts to student/teacher mode
+- ✅ **Mode-Specific Badge** - "NEW" indicator for Teaching Studio
+- ✅ **Enhanced Mobile UX** - Stacked controls, better spacing
+
 ### Visual Enhancements
 - ✅ Complete UI redesign with modern aesthetics
 - ✅ Animated gradient background
@@ -295,6 +334,7 @@ Modify CSS variables in `style.css`:
 - ✅ Smooth animations and transitions
 - ✅ Professional typography
 - ✅ Improved color scheme
+- ✅ Special Teaching Studio styling (green gradient when active)
 
 ### UX Improvements
 - ✅ Conversation history with context
@@ -317,11 +357,13 @@ Modify CSS variables in `style.css`:
 - ✅ Mode-specific AI instructions
 - ✅ Enhanced system prompts
 - ✅ Better code organization
-- ✅ Web Audio API integration
-- ✅ Canvas-based audio visualization
-- ✅ Advanced voice synthesis controls
+- ✅ Web Audio API integration for visualization
+- ✅ Canvas-based real-time waveform rendering
+- ✅ OpenAI TTS-1-HD integration
+- ✅ Intelligent audio caching system
 - ✅ Continuous listening architecture
 - ✅ Notification sound system
+- ✅ Graceful fallback mechanisms
 
 ## 🤝 Contributing
 
@@ -351,19 +393,29 @@ For support, email support@learnwg.com or visit [LearnWG](https://learnwg.vercel
 ## 🗺️ Roadmap
 
 ### Voice & Audio
+- [x] OpenAI TTS integration with natural voices
+- [x] Real-time audio visualization
+- [x] Intelligent audio caching
 - [ ] Voice activity detection (VAD)
 - [ ] Pronunciation scoring and feedback
-- [ ] Audio playback with waveform
-- [ ] Voice recording history
-- [ ] Custom wake words
+- [ ] Audio playback controls with waveform
+- [ ] Voice recording history and playback
+- [ ] Custom wake words for hands-free activation
+- [ ] Accent selection per language
+- [ ] Voice cloning for personalized tutoring
 
 ### Learning Features
+- [x] Teaching Studio for educators
+- [x] Mode-specific conversation starters
 - [ ] User authentication and profiles
 - [ ] Progress tracking and analytics
 - [ ] Flashcard system with spaced repetition
 - [ ] Gamification elements and achievements
 - [ ] Social features (practice with peers)
 - [ ] More languages (Italian, Japanese, Chinese, etc.)
+- [ ] Student progress reports for teachers
+- [ ] Classroom management features
+- [ ] Assignment creation and tracking
 
 ### Technical
 - [ ] Mobile app (React Native)

@@ -304,6 +304,35 @@ h1, h2, h3, h4, h5, h6 {
     color: white;
 }
 
+.teaching-mode-btn {
+    position: relative;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border: 1px solid var(--accent-purple);
+}
+
+.teaching-mode-btn:hover {
+    background: var(--primary-gradient);
+}
+
+.teaching-mode-btn.active {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.mode-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--success-gradient);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: var(--shadow-sm);
+}
+
 /* Session Controls */
 .session-controls {
     display: flex;
@@ -869,6 +898,7 @@ h1, h2, h3, h4, h5, h6 {
 .voice-controls {
     display: flex;
     gap: var(--spacing-xs);
+    flex-shrink: 0;
 }
 
 /* ==================== CTA BUTTON ==================== */
@@ -1279,6 +1309,86 @@ input:checked + .toggle-slider:before {
 
     .starter-grid {
         grid-template-columns: 1fr;
+    }
+
+    /* Mobile Input Area Optimization */
+    .input-wrapper {
+        padding: var(--spacing-xs);
+        gap: var(--spacing-xs);
+    }
+
+    .voice-controls {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .input-action-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .send-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    #user-input {
+        font-size: 0.9375rem;
+        padding: var(--spacing-sm);
+    }
+
+    .input-footer {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: flex-start;
+    }
+
+    .footer-left,
+    .footer-right {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .auto-play-toggle {
+        font-size: 0.8125rem;
+    }
+
+    .shortcut-hint {
+        font-size: 0.6875rem;
+    }
+
+    .mode-indicator {
+        font-size: 0.6875rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    /* Voice Recording Panel Mobile */
+    .voice-recording-panel {
+        padding: var(--spacing-md);
+    }
+
+    .recording-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+
+    .recording-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Conversation Starters Mobile */
+    .conversation-starters {
+        padding: var(--spacing-md);
+    }
+
+    .starter-btn {
+        font-size: 0.8125rem;
+        padding: var(--spacing-sm);
     }
 }
 

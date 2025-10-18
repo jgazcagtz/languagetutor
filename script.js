@@ -12,12 +12,13 @@ const state = {
         voiceNotifications: true
     },
     voiceSettings: {
-        rate: 0.9,
-        pitch: 1.0,
+        rate: 0.95,
         volume: 1.0,
-        selectedVoice: null,
+        selectedVoice: 'auto', // OpenAI voice: auto, nova, shimmer, alloy, echo, fable, onyx
         continuousListening: false
     },
+    audioCache: new Map(), // Cache audio to avoid regenerating
+    currentAudio: null, // Track currently playing audio
     isProcessing: false,
     isRecording: false,
     recordingStartTime: null,
@@ -30,36 +31,76 @@ const state = {
 
 // ==================== CONVERSATION STARTERS ====================
 const conversationStarters = {
-    'en-US': [
-        "How do I introduce myself in English?",
-        "Teach me common greetings",
-        "Help me with verb tenses",
-        "What are some useful phrases for travel?"
-    ],
-    'es-ES': [
-        "¿Cómo me presento en español?",
-        "Ayúdame con los verbos irregulares",
-        "Enséñame frases comunes para viajar",
-        "Explica el subjuntivo"
-    ],
-    'fr-FR': [
-        "Comment me présenter en français?",
-        "Aidez-moi avec les verbes",
-        "Apprenez-moi les salutations courantes",
-        "Expliquez les pronoms"
-    ],
-    'de-DE': [
-        "Wie stelle ich mich auf Deutsch vor?",
-        "Helfen Sie mir mit den Artikeln",
-        "Lehren Sie mich gängige Redewendungen",
-        "Erklären Sie die Fälle"
-    ],
-    'pt-PT': [
-        "Como me apresento em português?",
-        "Ajude-me com os verbos",
-        "Ensine-me saudações comuns",
-        "Explique as conjugações"
-    ]
+    'en-US': {
+        student: [
+            "How do I introduce myself in English?",
+            "Teach me common greetings",
+            "Help me with verb tenses",
+            "What are some useful phrases for travel?"
+        ],
+        teacher: [
+            "Create a beginner lesson plan for introducing yourself",
+            "Generate practice exercises for present tense",
+            "Suggest activities for teaching common phrases",
+            "What are common pronunciation mistakes to watch for?"
+        ]
+    },
+    'es-ES': {
+        student: [
+            "¿Cómo me presento en español?",
+            "Ayúdame con los verbos irregulares",
+            "Enséñame frases comunes para viajar",
+            "Explica el subjuntivo"
+        ],
+        teacher: [
+            "Crea un plan de lección para enseñar el subjuntivo",
+            "Genera ejercicios para verbos irregulares",
+            "Sugiere actividades interactivas para principiantes",
+            "¿Cuáles son los errores comunes de estudiantes anglófonos?"
+        ]
+    },
+    'fr-FR': {
+        student: [
+            "Comment me présenter en français?",
+            "Aidez-moi avec les verbes",
+            "Apprenez-moi les salutations courantes",
+            "Expliquez les pronoms"
+        ],
+        teacher: [
+            "Créez un plan de leçon pour les pronoms",
+            "Générez des exercices de conjugaison",
+            "Suggérez des activités pour enseigner les salutations",
+            "Quelles sont les erreurs courantes à surveiller?"
+        ]
+    },
+    'de-DE': {
+        student: [
+            "Wie stelle ich mich auf Deutsch vor?",
+            "Helfen Sie mir mit den Artikeln",
+            "Lehren Sie mich gängige Redewendungen",
+            "Erklären Sie die Fälle"
+        ],
+        teacher: [
+            "Erstellen Sie einen Unterrichtsplan für Artikel",
+            "Generieren Sie Übungen für die Fälle",
+            "Schlagen Sie Aktivitäten für Anfänger vor",
+            "Was sind häufige Fehler englischsprachiger Lernender?"
+        ]
+    },
+    'pt-PT': {
+        student: [
+            "Como me apresento em português?",
+            "Ajude-me com os verbos",
+            "Ensine-me saudações comuns",
+            "Explique as conjugações"
+        ],
+        teacher: [
+            "Crie um plano de aula para conjugações verbais",
+            "Gere exercícios de prática",
+            "Sugira atividades interativas para iniciantes",
+            "Quais são os erros comuns de estudantes?"
+        ]
+    }
 };
 
 const languageNames = {
@@ -96,6 +137,11 @@ const modeConfig = {
         icon: 'fa-chart-line',
         name: 'Assessment Mode',
         systemAddition: ' Evaluate the student\'s level through progressive questioning.'
+    },
+    teaching: {
+        icon: 'fa-chalkboard-teacher',
+        name: 'Teaching Studio',
+        systemAddition: ' Act as an expert teaching assistant for language educators. Provide: lesson plan suggestions, exercise generation, teaching tips, cultural context notes, common student mistakes to watch for, pronunciation guides, differentiated instruction ideas, classroom activity suggestions, and professional teaching strategies. Help teachers create engaging, effective lessons.'
     }
 };
 
@@ -208,7 +254,11 @@ function showConversationStarters() {
     if (!state.selectedLanguageCode) return;
 
     starterGrid.innerHTML = '';
-    const starters = conversationStarters[state.selectedLanguageCode] || [];
+    
+    // Determine which starters to show based on current mode
+    const starterType = state.currentMode === 'teaching' ? 'teacher' : 'student';
+    const startersData = conversationStarters[state.selectedLanguageCode];
+    const starters = startersData ? (startersData[starterType] || startersData.student || []) : [];
 
     starters.forEach(starter => {
         const btn = document.createElement('button');
@@ -238,8 +288,15 @@ function setMode(mode) {
     const indicator = document.getElementById('mode-indicator');
     indicator.innerHTML = `<i class="fas ${config.icon}"></i><span>${config.name}</span>`;
 
-    // Add system message
-    addSystemMessage(`Switched to ${config.name}`);
+    // Update conversation starters based on mode
+    showConversationStarters();
+
+    // Add system message with mode-specific info
+    let modeMessage = `Switched to ${config.name}`;
+    if (mode === 'teaching') {
+        modeMessage += ' - Your AI teaching assistant is ready to help you create engaging lessons!';
+    }
+    addSystemMessage(modeMessage);
 }
 
 function addSystemMessage(text) {
@@ -318,7 +375,7 @@ async function sendMessage(messageText = null) {
 
         // Text-to-speech
         if (state.settings.autoPlay && state.settings.ttsEnabled) {
-            speakText(data.response);
+        speakText(data.response);
         }
 
         // Continue listening if continuous mode is on
@@ -703,64 +760,137 @@ function stopAudioVisualization() {
     document.getElementById('voice-level-fill').style.width = '0%';
 }
 
-// ==================== TEXT-TO-SPEECH WITH ADVANCED SETTINGS ====================
-function speakText(text) {
-    if (!state.settings.ttsEnabled || !('speechSynthesis' in window)) {
+// ==================== OPENAI TEXT-TO-SPEECH ====================
+async function speakText(text) {
+    if (!state.settings.ttsEnabled) {
         return;
     }
 
-    // Cancel any ongoing speech
-    speechSynthesis.cancel();
+    // Stop any currently playing audio
+    if (state.currentAudio) {
+        state.currentAudio.pause();
+        state.currentAudio = null;
+    }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = state.voiceSettings.rate;
-    utterance.pitch = state.voiceSettings.pitch;
-    utterance.volume = state.voiceSettings.volume;
+    // Check cache first
+    const cacheKey = `${text}_${state.voiceSettings.selectedVoice}_${state.selectedLanguage}`;
+    let audioData = state.audioCache.get(cacheKey);
 
-    // Set voice based on settings
-    const voices = speechSynthesis.getVoices();
-    if (voices.length > 0) {
-        if (state.voiceSettings.selectedVoice) {
-            const voice = voices.find(v => v.name === state.voiceSettings.selectedVoice);
-            if (voice) {
-                utterance.voice = voice;
+    if (!audioData) {
+        try {
+            // Call our TTS API endpoint
+            const response = await fetch('https://languagetutor.vercel.app/api/tts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    text: text,
+                    voice: state.voiceSettings.selectedVoice,
+                    language: state.selectedLanguage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('TTS service unavailable');
             }
-        }
-        
-        // Fallback to language-appropriate voice
-        if (!utterance.voice && state.selectedLanguageCode) {
-            const voice = voices.find(v => v.lang === state.selectedLanguageCode) ||
-                         voices.find(v => v.lang.startsWith(state.selectedLanguageCode?.split('-')[0]));
-            if (voice) utterance.voice = voice;
+
+            const data = await response.json();
+            audioData = data.audio;
+            
+            // Cache the audio (limit cache size to 20 items)
+            if (state.audioCache.size > 20) {
+                const firstKey = state.audioCache.keys().next().value;
+                state.audioCache.delete(firstKey);
+            }
+            state.audioCache.set(cacheKey, audioData);
+        } catch (error) {
+            console.error('TTS Error:', error);
+            // Fallback to browser TTS if OpenAI fails
+            fallbackBrowserTTS(text);
+            return;
         }
     }
 
-    speechSynthesis.speak(utterance);
+    // Play the audio
+    try {
+        const audioBlob = base64ToBlob(audioData, 'audio/mp3');
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        state.currentAudio = new Audio(audioUrl);
+        state.currentAudio.volume = state.voiceSettings.volume;
+        state.currentAudio.playbackRate = state.voiceSettings.rate;
+        
+        // Cleanup URL after playing
+        state.currentAudio.onended = () => {
+            URL.revokeObjectURL(audioUrl);
+            state.currentAudio = null;
+        };
+        
+        await state.currentAudio.play();
+    } catch (error) {
+        console.error('Audio playback error:', error);
+    }
 }
 
-// Initialize voices
-function initializeVoices() {
-    if ('speechSynthesis' in window) {
-        speechSynthesis.onvoiceschanged = () => {
-            populateVoiceList();
-        };
-        // Initial population
-        setTimeout(populateVoiceList, 100);
+// Fallback to browser TTS if OpenAI fails
+function fallbackBrowserTTS(text) {
+    if (!('speechSynthesis' in window)) return;
+    
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = state.voiceSettings.rate;
+    utterance.volume = state.voiceSettings.volume;
+    
+    // Try to find a voice matching the selected language
+    const voices = speechSynthesis.getVoices();
+    if (state.selectedLanguageCode && voices.length > 0) {
+        const voice = voices.find(v => v.lang === state.selectedLanguageCode) ||
+                     voices.find(v => v.lang.startsWith(state.selectedLanguageCode?.split('-')[0]));
+        if (voice) utterance.voice = voice;
     }
+
+            speechSynthesis.speak(utterance);
+}
+
+// Utility function to convert base64 to Blob
+function base64ToBlob(base64, mimeType) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+}
+
+// Initialize OpenAI voices
+function initializeVoices() {
+    populateVoiceList();
 }
 
 function populateVoiceList() {
     const voiceSelect = document.getElementById('voice-select');
     if (!voiceSelect) return;
     
-    const voices = speechSynthesis.getVoices();
-    voiceSelect.innerHTML = '<option value="">Auto (Default)</option>';
+    // OpenAI TTS voices with descriptions
+    const openAIVoices = [
+        { value: 'auto', name: 'Auto (Best for Language)', description: 'Automatically selects the best voice for your learning language' },
+        { value: 'nova', name: 'Nova', description: 'Warm, friendly female voice - excellent for teaching' },
+        { value: 'shimmer', name: 'Shimmer', description: 'Clear, articulate female voice - great for pronunciation' },
+        { value: 'alloy', name: 'Alloy', description: 'Neutral, balanced voice - professional tutor style' },
+        { value: 'echo', name: 'Echo', description: 'Clear male voice - good for deeper tones' },
+        { value: 'fable', name: 'Fable', description: 'Expressive British accent - engaging storyteller' },
+        { value: 'onyx', name: 'Onyx', description: 'Deep, authoritative male voice - formal instruction' }
+    ];
     
-    voices.forEach(voice => {
+    voiceSelect.innerHTML = '';
+    
+    openAIVoices.forEach(voice => {
         const option = document.createElement('option');
-        option.value = voice.name;
-        option.textContent = `${voice.name} (${voice.lang})`;
-        if (voice.name === state.voiceSettings.selectedVoice) {
+        option.value = voice.value;
+        option.textContent = `${voice.name} - ${voice.description}`;
+        if (voice.value === state.voiceSettings.selectedVoice) {
             option.selected = true;
         }
         voiceSelect.appendChild(option);
@@ -779,25 +909,35 @@ function closeVoiceSettings() {
 
 function updateSelectedVoice() {
     const select = document.getElementById('voice-select');
-    state.voiceSettings.selectedVoice = select.value || null;
+    state.voiceSettings.selectedVoice = select.value || 'auto';
+    
+    // Clear audio cache when voice changes
+    state.audioCache.clear();
+    
     saveVoiceSettings();
 }
 
 function updateSpeechRate(value) {
     state.voiceSettings.rate = parseFloat(value);
     document.getElementById('rate-value').textContent = value + 'x';
-    saveVoiceSettings();
-}
-
-function updateSpeechPitch(value) {
-    state.voiceSettings.pitch = parseFloat(value);
-    document.getElementById('pitch-value').textContent = value;
+    
+    // Update current audio if playing
+    if (state.currentAudio) {
+        state.currentAudio.playbackRate = state.voiceSettings.rate;
+    }
+    
     saveVoiceSettings();
 }
 
 function updateSpeechVolume(value) {
     state.voiceSettings.volume = parseFloat(value);
     document.getElementById('volume-value').textContent = Math.round(value * 100) + '%';
+    
+    // Update current audio if playing
+    if (state.currentAudio) {
+        state.currentAudio.volume = state.voiceSettings.volume;
+    }
+    
     saveVoiceSettings();
 }
 
@@ -827,37 +967,37 @@ function updateRecognitionLanguageDisplay() {
     }
 }
 
-function testVoice() {
+async function testVoice() {
     const messages = {
-        'en-US': 'Hello! This is a test of the selected voice.',
-        'es-ES': '¡Hola! Esta es una prueba de la voz seleccionada.',
-        'fr-FR': 'Bonjour! Ceci est un test de la voix sélectionnée.',
-        'de-DE': 'Hallo! Dies ist ein Test der ausgewählten Stimme.',
-        'pt-PT': 'Olá! Este é um teste da voz selecionada.'
+        'en-US': 'Hello! I\'m your AI language tutor. I\'m here to help you learn and practice English with natural, clear pronunciation.',
+        'es-ES': '¡Hola! Soy tu tutor de idiomas con inteligencia artificial. Estoy aquí para ayudarte a aprender y practicar español con pronunciación natural y clara.',
+        'fr-FR': 'Bonjour! Je suis votre tuteur de langue avec intelligence artificielle. Je suis là pour vous aider à apprendre et à pratiquer le français avec une prononciation naturelle et claire.',
+        'de-DE': 'Hallo! Ich bin Ihr KI-Sprachtutor. Ich bin hier, um Ihnen beim Lernen und Üben von Deutsch mit natürlicher, klarer Aussprache zu helfen.',
+        'pt-PT': 'Olá! Sou o seu tutor de idiomas com inteligência artificial. Estou aqui para ajudá-lo a aprender e praticar português com pronúncia natural e clara.'
     };
     
     const message = messages[state.selectedLanguageCode] || messages['en-US'];
-    speakText(message);
+    await speakText(message);
 }
 
 function resetVoiceSettings() {
     if (confirm('Reset all voice settings to defaults?')) {
         state.voiceSettings = {
-            rate: 0.9,
-            pitch: 1.0,
+            rate: 0.95,
             volume: 1.0,
-            selectedVoice: null,
+            selectedVoice: 'auto',
             continuousListening: false
         };
         
+        // Clear audio cache
+        state.audioCache.clear();
+        
         // Update UI
-        document.getElementById('speech-rate').value = 0.9;
-        document.getElementById('rate-value').textContent = '0.9x';
-        document.getElementById('speech-pitch').value = 1.0;
-        document.getElementById('pitch-value').textContent = '1.0';
+        document.getElementById('speech-rate').value = 0.95;
+        document.getElementById('rate-value').textContent = '0.95x';
         document.getElementById('speech-volume').value = 1.0;
         document.getElementById('volume-value').textContent = '100%';
-        document.getElementById('voice-select').value = '';
+        document.getElementById('voice-select').value = 'auto';
         document.getElementById('continuous-listening-toggle').checked = false;
         
         // Update continuous mode button
@@ -944,14 +1084,19 @@ function loadVoiceSettings() {
     if (saved) {
         state.voiceSettings = { ...state.voiceSettings, ...JSON.parse(saved) };
         
+        // Ensure selectedVoice is set to a valid OpenAI voice
+        if (!state.voiceSettings.selectedVoice || 
+            !['auto', 'nova', 'shimmer', 'alloy', 'echo', 'fable', 'onyx'].includes(state.voiceSettings.selectedVoice)) {
+            state.voiceSettings.selectedVoice = 'auto';
+        }
+        
         // Apply to UI when modal opens
         setTimeout(() => {
             document.getElementById('speech-rate').value = state.voiceSettings.rate;
             document.getElementById('rate-value').textContent = state.voiceSettings.rate + 'x';
-            document.getElementById('speech-pitch').value = state.voiceSettings.pitch;
-            document.getElementById('pitch-value').textContent = state.voiceSettings.pitch;
             document.getElementById('speech-volume').value = state.voiceSettings.volume;
             document.getElementById('volume-value').textContent = Math.round(state.voiceSettings.volume * 100) + '%';
+            document.getElementById('voice-select').value = state.voiceSettings.selectedVoice;
         }, 100);
     }
 }
@@ -1027,3 +1172,4 @@ document.querySelectorAll('.modal-content').forEach(modal => {
         e.stopPropagation();
     });
 });
+

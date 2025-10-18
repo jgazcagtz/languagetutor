@@ -82,6 +82,16 @@
                 </button>
             </div>
 
+            <!-- Teaching Mode -->
+            <div class="quick-actions" style="margin-top: var(--spacing-md);">
+                <h3>For Educators</h3>
+                <button class="action-btn teaching-mode-btn" onclick="setMode('teaching')">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                    <span>Teaching Studio</span>
+                    <span class="mode-badge">NEW</span>
+                </button>
+            </div>
+
             <!-- Session Controls -->
             <div class="session-controls">
                 <button class="control-btn" onclick="clearChat()">
@@ -92,6 +102,21 @@
                     <i class="fas fa-info-circle"></i>
                     <span>Help & Tips</span>
                 </button>
+            </div>
+
+            <!-- Donate Button -->
+            <div class="donate-section">
+                <a href="https://buymeacoffee.com/georgegeorge" target="_blank" rel="noopener noreferrer" class="donate-btn">
+                    <div class="coffee-steam">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <i class="fas fa-coffee"></i>
+                    <span class="donate-text">Buy Me a Coffee</span>
+                    <div class="donate-sparkle">✨</div>
+                </a>
+                <p class="donate-tagline">Support Language Tutor development</p>
             </div>
         </aside>
 
@@ -280,43 +305,50 @@
 
                 <div class="tutorial-section">
                     <h3><i class="fas fa-lightbulb"></i> Learning Modes</h3>
-                    <ul class="feature-list">
-                        <li>
-                            <i class="fas fa-comments"></i>
-                            <div>
-                                <strong>Free Conversation</strong>
-                                <p>Practice natural conversations in your target language</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-book"></i>
-                            <div>
-                                <strong>Grammar Help</strong>
-                                <p>Get detailed explanations about grammar rules and usage</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-spell-check"></i>
-                            <div>
-                                <strong>Vocabulary Builder</strong>
-                                <p>Learn new words and phrases with examples</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-dumbbell"></i>
-                            <div>
-                                <strong>Practice Exercises</strong>
-                                <p>Test your knowledge with interactive exercises</p>
-                            </div>
-                        </li>
-                        <li>
-                            <i class="fas fa-chart-line"></i>
-                            <div>
-                                <strong>Level Assessment</strong>
-                                <p>Evaluate your current proficiency level</p>
-                            </div>
-                        </li>
-                    </ul>
+                <ul class="feature-list">
+                    <li>
+                        <i class="fas fa-comments"></i>
+                        <div>
+                            <strong>Free Conversation</strong>
+                            <p>Practice natural conversations in your target language</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-book"></i>
+                        <div>
+                            <strong>Grammar Help</strong>
+                            <p>Get detailed explanations about grammar rules and usage</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-spell-check"></i>
+                        <div>
+                            <strong>Vocabulary Builder</strong>
+                            <p>Learn new words and phrases with examples</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-dumbbell"></i>
+                        <div>
+                            <strong>Practice Exercises</strong>
+                            <p>Test your knowledge with interactive exercises</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-chart-line"></i>
+                        <div>
+                            <strong>Level Assessment</strong>
+                            <p>Evaluate your current proficiency level</p>
+                        </div>
+                    </li>
+                    <li>
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <div>
+                            <strong>Teaching Studio (NEW!)</strong>
+                            <p>For educators: Create lessons, generate exercises, get teaching tips</p>
+                        </div>
+                    </li>
+                </ul>
                 </div>
 
                 <div class="tutorial-section">
@@ -404,11 +436,14 @@
             <div class="modal-body">
                 <!-- Voice Selection -->
                 <div class="voice-setting-group">
-                    <h3><i class="fas fa-user-circle"></i> Voice Selection</h3>
+                    <h3><i class="fas fa-user-circle"></i> OpenAI Voice Selection</h3>
                     <div class="setting-item-vertical">
-                        <label for="voice-select">Choose Voice</label>
+                        <label for="voice-select">Choose AI Voice</label>
+                        <p class="setting-description">
+                            Natural, human-like voices powered by OpenAI's advanced TTS technology
+                        </p>
                         <select id="voice-select" onchange="updateSelectedVoice()">
-                            <option value="">Default</option>
+                            <option value="auto">Auto (Best for Language)</option>
                         </select>
                         <button class="test-voice-btn" onclick="testVoice()">
                             <i class="fas fa-play"></i> Test Voice
@@ -422,31 +457,18 @@
                     <div class="setting-item-vertical">
                         <div class="slider-header">
                             <label>Speed</label>
-                            <span id="rate-value">1.0x</span>
+                            <span id="rate-value">0.95x</span>
                         </div>
-                        <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="updateSpeechRate(this.value)">
+                        <input type="range" id="speech-rate" min="0.5" max="2" step="0.05" value="0.95" oninput="updateSpeechRate(this.value)">
                         <div class="slider-labels">
-                            <span>Slower</span>
-                            <span>Normal</span>
-                            <span>Faster</span>
+                            <span>Slower (0.5x)</span>
+                            <span>Learning Speed (0.95x)</span>
+                            <span>Faster (2x)</span>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Speech Pitch -->
-                <div class="voice-setting-group">
-                    <h3><i class="fas fa-wave-square"></i> Speech Pitch</h3>
-                    <div class="setting-item-vertical">
-                        <div class="slider-header">
-                            <label>Pitch</label>
-                            <span id="pitch-value">1.0</span>
-                        </div>
-                        <input type="range" id="speech-pitch" min="0.5" max="2" step="0.1" value="1" oninput="updateSpeechPitch(this.value)">
-                        <div class="slider-labels">
-                            <span>Lower</span>
-                            <span>Normal</span>
-                            <span>Higher</span>
-                        </div>
+                        <p class="setting-hint">
+                            <i class="fas fa-lightbulb"></i> 
+                            Slightly slower speed (0.95x) is optimal for language learning and pronunciation practice
+                        </p>
                     </div>
                 </div>
 
@@ -507,16 +529,19 @@
 
                 <!-- Recognition Settings -->
                 <div class="voice-setting-group">
-                    <h3><i class="fas fa-microphone"></i> Recognition Settings</h3>
+                    <h3><i class="fas fa-microphone"></i> Voice Technology</h3>
                     
                     <div class="setting-item-vertical">
-                        <label>Recognition Language</label>
+                        <label>Current Setup</label>
                         <p class="setting-description">
-                            Currently using: <strong id="current-recognition-lang">Not selected</strong>
+                            <strong>Recognition Language:</strong> <span id="current-recognition-lang">Not selected</span><br>
+                            <strong>TTS Engine:</strong> OpenAI TTS-1-HD (Premium Quality)<br>
+                            <strong>Audio Format:</strong> MP3 with intelligent caching
                         </p>
                         <p class="setting-hint">
                             <i class="fas fa-info-circle"></i> 
-                            Recognition language changes automatically when you select a learning language
+                            Using OpenAI's state-of-the-art text-to-speech for natural, human-like pronunciation. 
+                            Recognition language updates automatically with your learning language selection.
                         </p>
                     </div>
                 </div>
