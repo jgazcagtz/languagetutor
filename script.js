@@ -414,9 +414,30 @@ async function sendMessage(messageText = null) {
             })
         });
 
-        const data = await response.json();
+        // Check if response is OK before parsing JSON
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error Response:', response.status, errorText);
+            throw new Error(`API returned ${response.status}: ${errorText.substring(0, 100)}`);
+        }
 
-        if (data.error) throw new Error(data.error);
+        // Try to parse JSON with error handling
+        let data;
+        try {
+            data = await response.json();
+        } catch (jsonError) {
+            const responseText = await response.text();
+            console.error('Invalid JSON response:', responseText);
+            throw new Error('Server returned invalid response. Please try again.');
+        }
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        if (!data.response) {
+            throw new Error('No response from AI. Please try again.');
+        }
 
         // Add bot response to history
         state.conversationHistory.push({
@@ -432,7 +453,11 @@ async function sendMessage(messageText = null) {
 
         // Text-to-speech with OpenAI
         if (state.settings.autoPlay && state.settings.ttsEnabled) {
-            await speakText(data.response);
+            try {
+                await speakText(data.response);
+            } catch (ttsError) {
+                console.warn('TTS failed, continuing anyway:', ttsError);
+            }
         }
 
         // Continue listening if continuous mode is on
@@ -445,10 +470,21 @@ async function sendMessage(messageText = null) {
         }
     } catch (error) {
         console.error('Error in sendMessage:', error);
-        addBotMessage('Sorry, I encountered an error. Please try again.');
         
-        // Still show the error message even if there's an error
-        showToast('Failed to get response. Check console for details.', 'error');
+        // User-friendly error messages
+        let errorMessage = 'Sorry, I encountered an error. ';
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            errorMessage += 'Please check your internet connection.';
+        } else if (error.message.includes('401') || error.message.includes('403')) {
+            errorMessage += 'Authentication error. Please check API configuration.';
+        } else if (error.message.includes('429')) {
+            errorMessage += 'Too many requests. Please wait a moment.';
+        } else {
+            errorMessage += 'Please try again.';
+        }
+        
+        addBotMessage(errorMessage);
+        showToast(error.message, 'error');
     } finally {
         hideTypingIndicator();
         state.isProcessing = false;
