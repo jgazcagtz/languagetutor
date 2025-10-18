@@ -151,11 +151,27 @@ document.addEventListener('DOMContentLoaded', () => {
     loadVoiceSettings();
     initializeEventListeners();
     initializeVoices();
-    loadConversationHistory();
     setupKeyboardShortcuts();
     setupTouchRippleEffects();
     setupSwipeGestures();
+    
+    // Note: loadConversationHistory is called when language is selected
+    console.log('Language Tutor initialized');
 });
+
+// Save conversation before page unload
+window.addEventListener('beforeunload', () => {
+    if (state.conversationHistory.length > 0) {
+        saveConversationHistory();
+    }
+});
+
+// Auto-save conversation every 30 seconds
+setInterval(() => {
+    if (state.conversationHistory.length > 0 && state.selectedLanguageCode) {
+        saveConversationHistory();
+    }
+}, 30000); // 30 seconds
 
 function initializeEventListeners() {
     // Use event delegation for language buttons to optimize memory
@@ -217,6 +233,20 @@ function setupKeyboardShortcuts() {
 
 // ==================== LANGUAGE SELECTION ====================
 function selectLanguage(langCode, langName) {
+    // Check if selecting the SAME language (don't clear conversation)
+    const isSameLanguage = (state.selectedLanguageCode === langCode);
+    
+    // If switching to a DIFFERENT language, ask to confirm
+    if (!isSameLanguage && state.selectedLanguageCode && state.conversationHistory.length > 0) {
+        if (!confirm(`Switching from ${state.selectedLanguage} to ${langName} will clear your current conversation. Continue?`)) {
+            return; // User cancelled
+        }
+        // User confirmed - clear the conversation
+        state.conversationHistory = [];
+        document.getElementById('chat-log').innerHTML = '';
+    }
+    
+    // Set the language
     state.selectedLanguageCode = langCode;
     state.selectedLanguage = langName;
 
@@ -228,10 +258,6 @@ function selectLanguage(langCode, langName) {
 
     document.getElementById('current-language').textContent = `Learning ${langName}`;
 
-    // Hide welcome screen, show conversation starters
-    hideWelcome();
-    showConversationStarters();
-
     // Update speech recognition language
     if (recognition) {
         recognition.lang = langCode;
@@ -239,21 +265,23 @@ function selectLanguage(langCode, langName) {
 
     // Update voice settings display
     updateRecognitionLanguageDisplay();
-
-    // Clear previous conversation when switching languages
+    
+    // Load conversation history for this language
+    loadConversationHistory();
+    
+    // Restore messages to UI if history exists
     if (state.conversationHistory.length > 0) {
-        if (confirm('Switching languages will clear your current conversation. Continue?')) {
-            state.conversationHistory = [];
-            document.getElementById('chat-log').innerHTML = '';
-        } else {
-            return;
+        restoreConversationToUI();
+    } else {
+        // Only show welcome for first time with this language
+        hideWelcome();
+        showConversationStarters();
+        
+        // Show initial greeting ONLY if chat is empty
+        const chatLog = document.getElementById('chat-log');
+        if (chatLog.children.length === 0) {
+            addBotMessage(`Great! Let's learn ${langName} together. How can I help you today?`);
         }
-    }
-
-    // Show initial greeting ONLY if chat is empty
-    const chatLog = document.getElementById('chat-log');
-    if (chatLog.children.length === 0) {
-        addBotMessage(`Great! Let's learn ${langName} together. How can I help you today?`);
     }
 }
 
@@ -286,6 +314,12 @@ function showConversationStarters() {
 
 // ==================== MODE MANAGEMENT ====================
 function setMode(mode) {
+    // Don't change mode if language not selected
+    if (!state.selectedLanguageCode) {
+        alert('Please select a language first!');
+        return;
+    }
+    
     state.currentMode = mode;
 
     // Update UI
@@ -301,7 +335,7 @@ function setMode(mode) {
     // Update conversation starters based on mode
     showConversationStarters();
 
-    // Add system message with mode-specific info
+    // Add system message with mode-specific info (don't save system messages to history)
     let modeMessage = `Switched to ${config.name}`;
     if (mode === 'teaching') {
         modeMessage += ' - Your AI teaching assistant is ready to help you create engaging lessons!';
@@ -410,11 +444,19 @@ async function sendMessage(messageText = null) {
             }, 1000);
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error in sendMessage:', error);
         addBotMessage('Sorry, I encountered an error. Please try again.');
+        
+        // Still show the error message even if there's an error
+        showToast('Failed to get response. Check console for details.', 'error');
     } finally {
         hideTypingIndicator();
         state.isProcessing = false;
+        
+        // Ensure conversation is saved even if there was an error
+        if (state.conversationHistory.length > 0) {
+            saveConversationHistory();
+        }
     }
 }
 
@@ -1195,52 +1237,123 @@ function saveVoiceSettings() {
 }
 
 // ==================== CONVERSATION PERSISTENCE ====================
-// Debounced save to reduce localStorage writes
-const saveConversationHistory = debounce(() => {
+// Save conversation history immediately (no debounce for reliability)
+function saveConversationHistory() {
     if (state.selectedLanguageCode) {
         const key = `conversation_${state.selectedLanguageCode}`;
         try {
             localStorage.setItem(key, JSON.stringify(state.conversationHistory));
+            console.log(`Saved ${state.conversationHistory.length} messages for ${state.selectedLanguage}`);
         } catch (error) {
             console.error('Failed to save conversation history:', error);
             // Handle quota exceeded error
             if (error.name === 'QuotaExceededError') {
+                console.warn('LocalStorage quota exceeded, clearing oldest conversation');
                 // Clear old conversations to make space
                 const keys = Object.keys(localStorage).filter(k => k.startsWith('conversation_'));
                 if (keys.length > 1) {
+                    // Remove the first (oldest) conversation
                     localStorage.removeItem(keys[0]);
                     // Try again
-                    localStorage.setItem(key, JSON.stringify(state.conversationHistory));
+                    try {
+                        localStorage.setItem(key, JSON.stringify(state.conversationHistory));
+                    } catch (retryError) {
+                        console.error('Still failed after cleanup:', retryError);
+                        showToast('Conversation too long. Consider clearing chat.', 'warning');
+                    }
                 }
             }
         }
     }
-}, 500);
+}
 
 function loadConversationHistory() {
     if (state.selectedLanguageCode) {
         const key = `conversation_${state.selectedLanguageCode}`;
         const saved = localStorage.getItem(key);
         if (saved) {
-            state.conversationHistory = JSON.parse(saved);
+            try {
+                state.conversationHistory = JSON.parse(saved);
+                console.log(`Loaded ${state.conversationHistory.length} messages for ${state.selectedLanguage}`);
+            } catch (error) {
+                console.error('Failed to load conversation history:', error);
+                state.conversationHistory = [];
+            }
+        } else {
+            // No saved conversation for this language
+            state.conversationHistory = [];
         }
     }
 }
 
+// Restore conversation messages to the UI
+function restoreConversationToUI() {
+    const chatLog = document.getElementById('chat-log');
+    if (!chatLog) return;
+    
+    // Clear current UI
+    chatLog.innerHTML = '';
+    
+    // Hide welcome screen
+    hideWelcome();
+    
+    // Restore each message without animations or particles (for performance)
+    state.conversationHistory.forEach((msg, index) => {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${msg.role === 'user' ? 'user-message' : 'bot-message'}`;
+        messageDiv.style.opacity = '1'; // Ensure visible
+        
+        const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
+        
+        if (msg.role === 'user') {
+            messageDiv.innerHTML = `
+                <div class="message-avatar">👤</div>
+                <div class="message-content">
+                    <div class="message-text">${escapeHtml(msg.content)}</div>
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="message-avatar">🤖</div>
+                <div class="message-content">
+                    <div class="message-text">${formatBotMessage(msg.content)}</div>
+                </div>
+            `;
+        }
+        
+        chatLog.appendChild(messageDiv);
+    });
+    
+    // Scroll to bottom after restore
+    setTimeout(() => scrollToBottom(), 100);
+    
+    console.log(`Restored ${state.conversationHistory.length} messages to UI`);
+}
+
 function clearChat() {
     if (confirm('Are you sure you want to clear the conversation?')) {
+        // Clear state
         state.conversationHistory = [];
-        document.getElementById('chat-log').innerHTML = '';
         
+        // Clear UI
+        const chatLog = document.getElementById('chat-log');
+        if (chatLog) {
+            chatLog.innerHTML = '';
+        }
+        
+        // Clear localStorage
         if (state.selectedLanguageCode) {
             const key = `conversation_${state.selectedLanguageCode}`;
             localStorage.removeItem(key);
+            console.log(`Cleared conversation for ${state.selectedLanguage}`);
         }
         
+        // Show fresh start message
         if (state.selectedLanguage) {
             addBotMessage(`Conversation cleared. Let's start fresh with ${state.selectedLanguage}!`);
         }
         
+        // Show conversation starters
         showConversationStarters();
     }
 }

@@ -565,14 +565,8 @@
 
     <script src="script.js"></script>
     <script>
+        // Set current year
         document.getElementById('year').textContent = new Date().getFullYear();
-        
-        // Enter key to send message
-        document.getElementById('user-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
     </script>
 </body>
 </html>
