@@ -7,8 +7,15 @@ module.exports = async (req, res) => {
     const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
     const { text, voice = 'nova', language } = req.body;
 
-    if (!text) {
-        return res.status(400).json({ error: 'Text is required' });
+    if (!text || typeof text !== 'string') {
+        return res.status(400).json({ error: 'Valid text is required' });
+    }
+
+    // Limit text length to prevent excessive API usage (OpenAI TTS limit is 4096 chars)
+    const sanitizedText = text.trim().substring(0, 1000);
+    
+    if (!sanitizedText) {
+        return res.status(400).json({ error: 'Text cannot be empty' });
     }
 
     // Map languages to most appropriate OpenAI voices for natural tutoring
@@ -36,7 +43,7 @@ module.exports = async (req, res) => {
             body: JSON.stringify({
                 model: 'tts-1-hd', // High quality model for natural sound
                 voice: selectedVoice,
-                input: text,
+                input: sanitizedText,
                 speed: 0.95, // Slightly slower for language learning clarity
                 response_format: 'mp3'
             })

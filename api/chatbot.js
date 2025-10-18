@@ -13,7 +13,8 @@ module.exports = async (req, res) => {
         grammar: 'Provide detailed grammar explanations with clear examples. Break down complex rules into understandable parts and offer practice sentences.',
         vocabulary: 'Teach new vocabulary in context. Provide definitions, usage examples, synonyms, and create sample sentences. Help build a strong vocabulary foundation.',
         practice: 'Create interactive exercises and quizzes. Test the student\'s knowledge with fill-in-the-blanks, translations, or sentence construction. Provide immediate feedback.',
-        assessment: 'Evaluate the student\'s proficiency through progressive questioning. Start with basic questions and increase difficulty. Provide a level assessment (A1-C2) with constructive feedback.'
+        assessment: 'Evaluate the student\'s proficiency through progressive questioning. Start with basic questions and increase difficulty. Provide a level assessment (A1-C2) with constructive feedback.',
+        teaching: 'Act as an expert teaching assistant for language educators. Provide lesson plan suggestions, exercise generation, teaching tips, cultural context notes, common student mistakes to watch for, pronunciation guides, differentiated instruction ideas, classroom activity suggestions, and professional teaching strategies. Help teachers create engaging, effective lessons.'
     };
 
     // Enhanced system prompt
@@ -73,10 +74,24 @@ Which language would you like to learn today?`;
                 }
             ];
 
-            // Add conversation history if provided (limit to last 10 exchanges to manage token usage)
+            // Optimize conversation history for token usage
             if (conversationHistory && Array.isArray(conversationHistory)) {
-                const recentHistory = conversationHistory.slice(-20); // Last 20 messages (10 exchanges)
-                messages.push(...recentHistory);
+                // Use sliding window: keep first 2 messages (context) + last 12 messages (recent conversation)
+                // This maintains initial context while limiting token usage
+                let optimizedHistory = [];
+                
+                if (conversationHistory.length <= 14) {
+                    // If short conversation, send all
+                    optimizedHistory = conversationHistory;
+                } else {
+                    // Send first 2 (initial context) + last 12 (recent exchanges)
+                    optimizedHistory = [
+                        ...conversationHistory.slice(0, 2),
+                        ...conversationHistory.slice(-12)
+                    ];
+                }
+                
+                messages.push(...optimizedHistory);
             } else {
                 // If no history, just add the current message
                 messages.push({ role: 'user', content: message });
@@ -94,9 +109,10 @@ Which language would you like to learn today?`;
                     messages: messages,
                     max_tokens: max_tokens || defaultMaxTokens,
                     temperature: 0.7,
-                    top_p: 1,
+                    top_p: 0.95, // Slightly reduced for more focused responses
                     frequency_penalty: 0.3, // Reduce repetition
-                    presence_penalty: 0.3 // Encourage topic diversity
+                    presence_penalty: 0.3, // Encourage topic diversity
+                    stream: false // Explicit non-streaming for simplicity
                 })
             });
 

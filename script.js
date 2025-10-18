@@ -153,15 +153,17 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeVoices();
     loadConversationHistory();
     setupKeyboardShortcuts();
+    setupTouchRippleEffects();
+    setupSwipeGestures();
 });
 
 function initializeEventListeners() {
-    // Language selection
-    document.querySelectorAll('.language-btn').forEach(btn => {
-        btn.addEventListener('click', () => selectLanguage(
-            btn.dataset.lang,
-            btn.dataset.name
-        ));
+    // Use event delegation for language buttons to optimize memory
+    document.querySelector('.language-grid')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.language-btn');
+        if (btn) {
+            selectLanguage(btn.dataset.lang, btn.dataset.name);
+        }
     });
 
     // Sidebar toggle for mobile
@@ -169,7 +171,8 @@ function initializeEventListeners() {
     const sidebarToggle = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('sidebar');
 
-    menuToggle?.addEventListener('click', () => {
+    menuToggle?.addEventListener('click', (e) => {
+        e.stopPropagation();
         sidebar.classList.add('active');
     });
 
@@ -177,20 +180,23 @@ function initializeEventListeners() {
         sidebar.classList.remove('active');
     });
 
-    // Close sidebar when clicking outside on mobile
+    // Optimized sidebar close using single event listener
     document.addEventListener('click', (e) => {
-        if (window.innerWidth <= 968) {
-            if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        if (window.innerWidth <= 968 && sidebar.classList.contains('active')) {
+            if (!sidebar.contains(e.target) && e.target !== menuToggle) {
                 sidebar.classList.remove('active');
             }
         }
     });
 
-    // Enter key to send
-    document.getElementById('user-input').addEventListener('keypress', (e) => {
+    // Enter key to send (optimized to check for actual content)
+    const userInput = document.getElementById('user-input');
+    userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            sendMessage();
+            if (userInput.value.trim()) {
+                sendMessage();
+            }
         }
     });
 }
@@ -794,14 +800,17 @@ async function speakText(text) {
         return;
     }
 
+    // Sanitize text to avoid cache misses from minor formatting differences
+    const sanitizedText = text.trim().substring(0, 500); // Limit to 500 chars for TTS
+
     // Stop any currently playing audio
     if (state.currentAudio) {
         state.currentAudio.pause();
         state.currentAudio = null;
     }
 
-    // Check cache first
-    const cacheKey = `${text}_${state.voiceSettings.selectedVoice}_${state.selectedLanguage}`;
+    // Check cache first (use sanitized text for consistent caching)
+    const cacheKey = `${sanitizedText}_${state.voiceSettings.selectedVoice}_${state.selectedLanguage}`;
     let audioData = state.audioCache.get(cacheKey);
 
     if (!audioData) {
@@ -811,21 +820,27 @@ async function speakText(text) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    text: text,
+                    text: sanitizedText,
                     voice: state.voiceSettings.selectedVoice,
                     language: state.selectedLanguage
                 })
             });
 
             if (!response.ok) {
+                console.warn('TTS API returned error status:', response.status);
                 throw new Error('TTS service unavailable');
             }
 
             const data = await response.json();
+            
+            if (!data.audio) {
+                throw new Error('Invalid TTS response');
+            }
+            
             audioData = data.audio;
             
-            // Cache the audio (limit cache size to 20 items)
-            if (state.audioCache.size > 20) {
+            // Cache the audio (LRU cache with size limit)
+            if (state.audioCache.size >= 20) {
                 const firstKey = state.audioCache.keys().next().value;
                 state.audioCache.delete(firstKey);
             }
@@ -833,7 +848,7 @@ async function speakText(text) {
         } catch (error) {
             console.error('TTS Error:', error);
             // Fallback to browser TTS if OpenAI fails
-            fallbackBrowserTTS(text);
+            fallbackBrowserTTS(sanitizedText);
             return;
         }
     }
@@ -847,15 +862,23 @@ async function speakText(text) {
         state.currentAudio.volume = state.voiceSettings.volume;
         state.currentAudio.playbackRate = state.voiceSettings.rate;
         
-        // Cleanup URL after playing
+        // Cleanup URL after playing to prevent memory leaks
         state.currentAudio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             state.currentAudio = null;
         };
         
+        // Handle playback errors
+        state.currentAudio.onerror = () => {
+            URL.revokeObjectURL(audioUrl);
+            state.currentAudio = null;
+            console.error('Audio playback error');
+        };
+        
         await state.currentAudio.play();
     } catch (error) {
         console.error('Audio playback error:', error);
+        // Don't fallback on playback errors, just fail silently
     }
 }
 
@@ -1143,12 +1166,27 @@ function saveVoiceSettings() {
 }
 
 // ==================== CONVERSATION PERSISTENCE ====================
-function saveConversationHistory() {
+// Debounced save to reduce localStorage writes
+const saveConversationHistory = debounce(() => {
     if (state.selectedLanguageCode) {
         const key = `conversation_${state.selectedLanguageCode}`;
-        localStorage.setItem(key, JSON.stringify(state.conversationHistory));
+        try {
+            localStorage.setItem(key, JSON.stringify(state.conversationHistory));
+        } catch (error) {
+            console.error('Failed to save conversation history:', error);
+            // Handle quota exceeded error
+            if (error.name === 'QuotaExceededError') {
+                // Clear old conversations to make space
+                const keys = Object.keys(localStorage).filter(k => k.startsWith('conversation_'));
+                if (keys.length > 1) {
+                    localStorage.removeItem(keys[0]);
+                    // Try again
+                    localStorage.setItem(key, JSON.stringify(state.conversationHistory));
+                }
+            }
+        }
     }
-}
+}, 500);
 
 function loadConversationHistory() {
     if (state.selectedLanguageCode) {
@@ -1196,26 +1234,29 @@ function hideWelcome() {
 }
 
 // ==================== UTILITY FUNCTIONS ====================
-// Close modals when clicking outside
+// Optimized modal click handling (using event delegation)
 document.addEventListener('click', (e) => {
+    // Close modal when clicking outside
     if (e.target.classList.contains('modal')) {
         e.target.classList.remove('show');
     }
-});
-
-// Prevent modal close when clicking inside modal content
-document.querySelectorAll('.modal-content').forEach(modal => {
-    modal.addEventListener('click', (e) => {
+    // Prevent propagation from modal content (event delegation)
+    else if (e.target.closest('.modal-content')) {
         e.stopPropagation();
-    });
+    }
 });
 
 // ==================== COOL ANIMATIONS & EFFECTS ====================
 
-// Particle effect generator
+// Particle effect generator (optimized with reduced particle count on mobile)
 function createParticles(element) {
+    // Skip particles on slow devices or when user prefers reduced motion
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return;
+    }
+    
     const rect = element.getBoundingClientRect();
-    const particleCount = 5;
+    const particleCount = window.innerWidth < 640 ? 3 : 5; // Fewer particles on mobile
     
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
@@ -1273,7 +1314,31 @@ function setupLongPress(element, callback) {
 }
 
 // Smooth scroll with easing
+// Debounce helper to prevent excessive function calls
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Optimized smooth scroll with performance considerations
 function smoothScrollTo(element, duration = 500) {
+    // Use native smooth scrolling if available (better performance)
+    if ('scrollBehavior' in document.documentElement.style) {
+        element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth'
+        });
+        return;
+    }
+    
+    // Fallback to custom animation
     const start = element.scrollTop;
     const end = element.scrollHeight;
     const change = end - start;
@@ -1299,15 +1364,15 @@ function smoothScrollTo(element, duration = 500) {
 }
 
 // Enhanced scroll to bottom with smooth animation
-function scrollToBottom() {
+const scrollToBottom = debounce(() => {
     const chatArea = document.getElementById('chat-area');
     smoothScrollTo(chatArea, 300);
-}
+}, 100);
 
-// Confetti effect for celebrations
+// Confetti effect for celebrations (optimized for performance)
 function createConfetti() {
     const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
-    const confettiCount = 50;
+    const confettiCount = window.innerWidth < 640 ? 30 : 50; // Fewer on mobile
     
     for (let i = 0; i < confettiCount; i++) {
         const confetti = document.createElement('div');
@@ -1351,42 +1416,52 @@ function triggerHaptic(type = 'light') {
 }
 
 // Add touch ripple effect to buttons
-document.addEventListener('DOMContentLoaded', () => {
+function setupTouchRippleEffects() {
     document.querySelectorAll('button, .language-btn, .action-btn').forEach(button => {
         button.classList.add('touch-ripple');
     });
-    
-    // Setup swipe gestures for mobile sidebar
-    setupSwipeGestures();
-});
+}
 
 // ==================== SWIPE GESTURES FOR MOBILE ====================
 function setupSwipeGestures() {
+    // Only setup on mobile devices to save resources
+    if (window.innerWidth > 968) {
+        return;
+    }
+    
     const sidebar = document.getElementById('sidebar');
     let touchStartX = 0;
     let touchEndX = 0;
+    let touchStartY = 0;
+    let touchEndY = 0;
     
     document.addEventListener('touchstart', (e) => {
         touchStartX = e.changedTouches[0].screenX;
-    });
+        touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true }); // Passive for better scroll performance
     
     document.addEventListener('touchend', (e) => {
         touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;
         handleSwipe();
-    });
+    }, { passive: true });
     
     function handleSwipe() {
         const swipeThreshold = 50;
-        const swipeDistance = touchEndX - touchStartX;
+        const swipeDistanceX = touchEndX - touchStartX;
+        const swipeDistanceY = Math.abs(touchEndY - touchStartY);
+        
+        // Only trigger if horizontal swipe (not vertical scroll)
+        if (swipeDistanceY > 50) return;
         
         // Swipe right to open sidebar (from left edge)
-        if (swipeDistance > swipeThreshold && touchStartX < 50) {
+        if (swipeDistanceX > swipeThreshold && touchStartX < 50) {
             sidebar.classList.add('active');
             triggerHaptic('light');
         }
         
         // Swipe left to close sidebar
-        if (swipeDistance < -swipeThreshold && sidebar.classList.contains('active')) {
+        if (swipeDistanceX < -swipeThreshold && sidebar.classList.contains('active')) {
             sidebar.classList.remove('active');
             triggerHaptic('light');
         }
