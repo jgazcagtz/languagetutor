@@ -3,62 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌍Language Tutor™ </title>
-    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap" rel="stylesheet">
+    <title>Language Tutor™ - AI-Powered Learning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Moving Banner -->
-    <div class="moving-banner">
-        <p>🪐 Welcome to LearnWG Language Tutor! 🌍 📘 We support English, Spanish, French, German, and Portuguese! 📬 Please check the User Guide for tips on getting started and making the most of your learning journey! 🎈  🚀 💫 ¡Bienvenido al Tutor de Idiomas de LearnWG! 🌎 📚 ¡Ofrecemos soporte para inglés, español, francés, alemán y portugués! 🧳 🎒 ¡Consulta la Guía del Usuario para consejos sobre cómo comenzar y aprovechar al máximo tu aprendizaje! 🎉 🌐 </p>
+    <!-- Animated Background -->
+    <div class="background-animation">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
     </div>
 
-    <div class="chat-container">
-        <header>
-            <h1>Language Tutor™ </h1>
-            <p>Your AI Learning Companion 📚🤖</p>
-        </header>
-        
-        <div id="chat-log" class="chat-log">
-            <!-- Chat messages will appear here -->
-        </div>
-        
-        <div class="input-area">
-            <input type="text" id="user-input" placeholder="Type your question here... ✍️" />
-            <button onclick="sendMessage()">Send 🚀</button>
-            <button id="mic-button" onclick="toggleVoiceRecognition()" title="Start Voice Input">🎙️</button>
-        </div>
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Language Tutor</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
 
-        <footer>
-            <button class="tutorial-button" onclick="openTutorial()">User Guide 📘</button><br>
-            <p>&copy; <span id="year"></span> <a href="https://learnwg.vercel.app/" target="_blank">LearnWG</a></p>
-        </footer>
+            <!-- Language Selector -->
+            <div class="language-selector">
+                <h3>Active Language</h3>
+                <div class="language-grid">
+                    <button class="language-btn" data-lang="en-US" data-name="English">
+                        <span class="flag">🇬🇧</span>
+                        <span class="lang-name">English</span>
+                    </button>
+                    <button class="language-btn" data-lang="es-ES" data-name="Spanish">
+                        <span class="flag">🇪🇸</span>
+                        <span class="lang-name">Spanish</span>
+                    </button>
+                    <button class="language-btn" data-lang="fr-FR" data-name="French">
+                        <span class="flag">🇫🇷</span>
+                        <span class="lang-name">French</span>
+                    </button>
+                    <button class="language-btn" data-lang="de-DE" data-name="German">
+                        <span class="flag">🇩🇪</span>
+                        <span class="lang-name">German</span>
+                    </button>
+                    <button class="language-btn" data-lang="pt-PT" data-name="Portuguese">
+                        <span class="flag">🇵🇹</span>
+                        <span class="lang-name">Portuguese</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <h3>Learning Modes</h3>
+                <button class="action-btn" onclick="setMode('conversation')">
+                    <i class="fas fa-comments"></i>
+                    <span>Free Conversation</span>
+                </button>
+                <button class="action-btn" onclick="setMode('grammar')">
+                    <i class="fas fa-book"></i>
+                    <span>Grammar Help</span>
+                </button>
+                <button class="action-btn" onclick="setMode('vocabulary')">
+                    <i class="fas fa-spell-check"></i>
+                    <span>Vocabulary Builder</span>
+                </button>
+                <button class="action-btn" onclick="setMode('practice')">
+                    <i class="fas fa-dumbbell"></i>
+                    <span>Practice Exercises</span>
+                </button>
+                <button class="action-btn" onclick="setMode('assessment')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Level Assessment</span>
+                </button>
+            </div>
+
+            <!-- Session Controls -->
+            <div class="session-controls">
+                <button class="control-btn" onclick="clearChat()">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Clear Chat</span>
+                </button>
+                <button class="control-btn" onclick="openTutorial()">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Help & Tips</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Chat Section -->
+        <main class="chat-section">
+            <!-- Header -->
+            <header class="chat-header">
+                <button class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="header-info">
+                    <h1>
+                        <i class="fas fa-globe"></i>
+                        Language Tutor
+                    </h1>
+                    <p id="current-language">Select a language to begin</p>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" onclick="toggleSettings()" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Welcome Screen -->
+            <div class="welcome-screen" id="welcome-screen">
+                <div class="welcome-content">
+                    <div class="welcome-icon">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h2>Welcome to Language Tutor</h2>
+                    <p>Your AI-powered companion for mastering new languages</p>
+                    <div class="welcome-features">
+                        <div class="feature-card">
+                            <i class="fas fa-brain"></i>
+                            <h3>Smart Learning</h3>
+                            <p>Adaptive AI that adjusts to your level</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-microphone"></i>
+                            <h3>Voice Practice</h3>
+                            <p>Speak and listen to improve pronunciation</p>
+                        </div>
+                        <div class="feature-card">
+                            <i class="fas fa-tasks"></i>
+                            <h3>Multiple Modes</h3>
+                            <p>Grammar, vocabulary, conversation & more</p>
+                        </div>
+                    </div>
+                    <button class="cta-button" onclick="hideWelcome()">
+                        Get Started
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Conversation Starters (shown after language selection) -->
+            <div class="conversation-starters" id="conversation-starters" style="display: none;">
+                <h3>Get Started</h3>
+                <div class="starter-grid" id="starter-grid">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
+            <!-- Chat Area -->
+            <div class="chat-area" id="chat-area">
+                <div class="chat-log" id="chat-log">
+                    <!-- Messages appear here -->
+                </div>
+
+                <!-- Typing Indicator -->
+                <div class="typing-indicator" id="typing-indicator" style="display: none;">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <span>Tutor is typing...</span>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="input-container">
+                <!-- Current Mode Indicator -->
+                <div class="mode-indicator" id="mode-indicator">
+                    <i class="fas fa-comments"></i>
+                    <span>Conversation Mode</span>
+                </div>
+
+                <div class="input-wrapper">
+                    <button class="input-action-btn" id="mic-button" onclick="toggleVoiceRecognition()" title="Voice Input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <input 
+                        type="text" 
+                        id="user-input" 
+                        placeholder="Type your message..." 
+                        autocomplete="off"
+                    />
+                    <button class="send-btn" onclick="sendMessage()" title="Send Message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+
+                <div class="input-footer">
+                    <span class="shortcut-hint">Press Enter to send</span>
+                </div>
+            </div>
+        </main>
     </div>
 
     <!-- Tutorial Modal -->
     <div id="tutorial-modal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeTutorial()">&times;</span>
+        <div class="modal-content modal-large">
+            <button class="modal-close" onclick="closeTutorial()">
+                <i class="fas fa-times"></i>
+            </button>
 
-            <!-- English Section -->
-            <section class="tutorial-section">
-                <h2>Language Tutor™ - Welcome!</h2>
-                <p> This AI assistant supports English, Spanish, French, German, and Portuguese to help you practice & learn multiple languages with ease. Here's how to get started:</p>
-                <ul>
-                    <li>💬 <strong>Ask any question</strong> related to grammar, vocabulary, pronunciation, or language usage in any of the supported languages.</li>
-                    <li>📖 <strong>Get detailed explanations</strong> and examples tailored to each language's unique grammar and nuances.</li>
-                    <li>🔍 <strong>Practice conversations</strong> by typing sentences, and receive AI-generated responses in the same language.</li>
-                    <li>🎤 <strong>Use Voice Input</strong> by clicking the 🎙️ button to speak your questions.</li>
-                </ul>
-                <p>✍️ Type a question or click the 🎙️ button and speak your question, then hit "Send". Wait for your speech to be processed.</p>
-            </section>
+            <div class="modal-header">
+                <i class="fas fa-graduation-cap"></i>
+                <h2>Welcome to Language Tutor!</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="tutorial-section">
+                    <h3><i class="fas fa-rocket"></i> Getting Started</h3>
+                    <ol>
+                        <li>Select a language from the sidebar (English, Spanish, French, German, or Portuguese)</li>
+                        <li>Choose a learning mode or start with free conversation</li>
+                        <li>Type your question or use the microphone for voice input</li>
+                        <li>Get instant feedback and explanations from your AI tutor</li>
+                    </ol>
+                </div>
+
+                <div class="tutorial-section">
+                    <h3><i class="fas fa-lightbulb"></i> Learning Modes</h3>
+                    <ul class="feature-list">
+                        <li>
+                            <i class="fas fa-comments"></i>
+                            <div>
+                                <strong>Free Conversation</strong>
+                                <p>Practice natural conversations in your target language</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-book"></i>
+                            <div>
+                                <strong>Grammar Help</strong>
+                                <p>Get detailed explanations about grammar rules and usage</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-spell-check"></i>
+                            <div>
+                                <strong>Vocabulary Builder</strong>
+                                <p>Learn new words and phrases with examples</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-dumbbell"></i>
+                            <div>
+                                <strong>Practice Exercises</strong>
+                                <p>Test your knowledge with interactive exercises</p>
+                            </div>
+                        </li>
+                        <li>
+                            <i class="fas fa-chart-line"></i>
+                            <div>
+                                <strong>Level Assessment</strong>
+                                <p>Evaluate your current proficiency level</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="tutorial-section">
+                    <h3><i class="fas fa-keyboard"></i> Tips & Tricks</h3>
+                    <ul>
+                        <li>Use the microphone button to practice speaking and pronunciation</li>
+                        <li>The AI remembers your conversation context for better responses</li>
+                        <li>Click "Clear Chat" to start a fresh conversation</li>
+                        <li>Switch languages anytime to practice multiple languages</li>
+                        <li>Copy any message by clicking the copy icon</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="cta-button" onclick="closeTutorial()">
+                    Start Learning
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="toggleSettings()">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header">
+                <i class="fas fa-cog"></i>
+                <h2>Settings</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>
+                        <i class="fas fa-volume-up"></i>
+                        Text-to-Speech
+                    </label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="tts-toggle" checked onchange="toggleTTS()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <label>
+                        <i class="fas fa-clock"></i>
+                        Show Timestamps
+                    </label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="timestamp-toggle" checked onchange="toggleTimestamps()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <label>
+                        <i class="fas fa-moon"></i>
+                        Dark Mode
+                    </label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="theme-toggle" checked onchange="toggleTheme()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <p>&copy; <span id="year"></span> <a href="https://learnwg.vercel.app/" target="_blank">LearnWG</a> - Powered by AI</p>
+    </footer>
+
     <script src="script.js"></script>
     <script>
-        // Set the current year in the footer
         document.getElementById('year').textContent = new Date().getFullYear();
+        
+        // Enter key to send message
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>

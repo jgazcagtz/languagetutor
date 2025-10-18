@@ -4,19 +4,42 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method not allowed. Please use POST.' });
     }
 
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY; // Ensure this environment variable is set securely
-    const { message, max_tokens } = req.body;
+    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const { message, conversationHistory, language, mode, max_tokens } = req.body;
 
-    // Updated system prompt
-    const systemPrompt = `You are Language Tutor, a friendly, knowledgeable language tutor specializing in English, Spanish, French, German, and Portuguese. You are here to help students learn and practice these languages by answering questions, providing explanations, testing their skills, and offering level assessments upon request.
+    // Mode-specific system prompt additions
+    const modeInstructions = {
+        conversation: 'Focus on natural, engaging conversation practice. Encourage the student to express themselves and provide gentle corrections when needed.',
+        grammar: 'Provide detailed grammar explanations with clear examples. Break down complex rules into understandable parts and offer practice sentences.',
+        vocabulary: 'Teach new vocabulary in context. Provide definitions, usage examples, synonyms, and create sample sentences. Help build a strong vocabulary foundation.',
+        practice: 'Create interactive exercises and quizzes. Test the student\'s knowledge with fill-in-the-blanks, translations, or sentence construction. Provide immediate feedback.',
+        assessment: 'Evaluate the student\'s proficiency through progressive questioning. Start with basic questions and increase difficulty. Provide a level assessment (A1-C2) with constructive feedback.'
+    };
 
-    Engage in fluid, natural conversations, responding in the language of the user's input while keeping explanations clear and approachable. Use examples, ask follow-up questions, and encourage students to practice aloud or in writing. Adjust the complexity of explanations based on the student’s responses and apparent level.
+    // Enhanced system prompt
+    const systemPrompt = `You are Language Tutor, an expert AI language instructor specializing in English, Spanish, French, German, and Portuguese. You are passionate about teaching and deeply knowledgeable about language acquisition.
 
-    If a student requests an assessment, evaluate their language level by asking questions of increasing difficulty and provide an estimated level (e.g., beginner, intermediate, advanced) based on their responses. Offer tips for improvement tailored to their level and suggest resources or exercises for additional practice.
+Your teaching approach:
+- Respond in the language being learned (${language || 'the student\'s chosen language'}) while keeping explanations clear and appropriate to the student's level
+- Be encouraging, patient, and supportive
+- Adapt complexity based on the student's responses
+- Use examples from real-world contexts
+- Correct errors gently and constructively
+- Ask follow-up questions to deepen understanding
+- Celebrate progress and milestones
 
-    Above all, make the learning process enjoyable, accessible, and responsive to each student’s unique needs.`;
+Current mode: ${mode || 'conversation'}
+${modeInstructions[mode] || modeInstructions.conversation}
 
-    // Define default max_tokens if not provided
+Teaching guidelines:
+1. For beginners: Use simple vocabulary, short sentences, and provide translations when helpful
+2. For intermediate: Challenge with complex structures while remaining accessible
+3. For advanced: Discuss nuanced topics, idioms, and cultural context
+4. Always provide context for grammar rules
+5. Use formatting for clarity: **bold** for emphasis, *italic* for examples, \`code\` for linguistic terms
+
+Remember: Your goal is to make language learning enjoyable, effective, and personalized to each student's needs.`;
+
     const defaultMaxTokens = 500;
 
     try {
@@ -24,9 +47,42 @@ module.exports = async (req, res) => {
 
         if (!message) {
             // Initial welcome message
-            botMessage = 'Welcome to Language Tutor! I can help you learn English, Spanish, French, German, or Portuguese. Feel free to ask me questions about grammar, vocabulary, pronunciation, or anything else related to these languages. For example, you can ask "How do I conjugate the verb \'to be\' in Spanish?" or "What are some common phrases in German for traveling?" Which language would you like to start with?';
+            botMessage = `Welcome to Language Tutor! 🌍
+
+I'm your AI language learning companion, ready to help you master English, Spanish, French, German, or Portuguese.
+
+**How I can help you:**
+- 💬 Practice natural conversations
+- 📖 Explain grammar rules and usage
+- 📝 Build your vocabulary
+- 🎯 Provide targeted exercises
+- 📊 Assess your proficiency level
+
+**Getting started:**
+1. Select your target language from the sidebar
+2. Choose a learning mode or start with free conversation
+3. Ask me anything or use the conversation starters!
+
+Which language would you like to learn today?`;
         } else {
-            // Send the user's message to the OpenAI API
+            // Build messages array with conversation history
+            const messages = [
+                {
+                    role: 'system',
+                    content: systemPrompt
+                }
+            ];
+
+            // Add conversation history if provided (limit to last 10 exchanges to manage token usage)
+            if (conversationHistory && Array.isArray(conversationHistory)) {
+                const recentHistory = conversationHistory.slice(-20); // Last 20 messages (10 exchanges)
+                messages.push(...recentHistory);
+            } else {
+                // If no history, just add the current message
+                messages.push({ role: 'user', content: message });
+            }
+
+            // Make request to OpenAI
             const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -34,34 +90,43 @@ module.exports = async (req, res) => {
                     'Authorization': `Bearer ${OPENAI_API_KEY}`
                 },
                 body: JSON.stringify({
-                    model: 'gpt-4', // GPT-4 model
-                    messages: [
-                        {
-                            role: 'system',
-                            content: systemPrompt
-                        },
-                        { role: 'user', content: message }
-                    ],
+                    model: 'gpt-4',
+                    messages: messages,
                     max_tokens: max_tokens || defaultMaxTokens,
-                    temperature: 0.7, // Adjust temperature for response creativity
+                    temperature: 0.7,
                     top_p: 1,
-                    frequency_penalty: 0,
-                    presence_penalty: 0
+                    frequency_penalty: 0.3, // Reduce repetition
+                    presence_penalty: 0.3 // Encourage topic diversity
                 })
             });
 
             if (!openAIResponse.ok) {
                 const errorData = await openAIResponse.json();
                 console.error('OpenAI API Error:', errorData);
-                return res.status(openAIResponse.status).json({ error: errorData.error.message || 'Error from OpenAI API' });
+                
+                // Provide more specific error messages
+                if (openAIResponse.status === 429) {
+                    return res.status(429).json({ 
+                        error: 'Our AI is currently busy. Please try again in a moment.' 
+                    });
+                } else if (openAIResponse.status === 401) {
+                    return res.status(500).json({ 
+                        error: 'Authentication error. Please contact support.' 
+                    });
+                } else {
+                    return res.status(openAIResponse.status).json({ 
+                        error: errorData.error?.message || 'Error from AI service. Please try again.' 
+                    });
+                }
             }
 
-            // Parse the OpenAI response
             const data = await openAIResponse.json();
 
             if (!data.choices || !data.choices.length) {
                 console.error('Unexpected OpenAI API response:', data);
-                return res.status(500).json({ error: 'Unexpected response from OpenAI API' });
+                return res.status(500).json({ 
+                    error: 'Unexpected response from AI. Please try again.' 
+                });
             }
 
             botMessage = data.choices[0].message.content.trim();
@@ -70,6 +135,16 @@ module.exports = async (req, res) => {
         res.status(200).json({ response: botMessage });
     } catch (error) {
         console.error('Error in chatbot function:', error);
-        res.status(500).json({ error: 'Error processing request' });
+        
+        // Provide user-friendly error messages
+        if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+            return res.status(503).json({ 
+                error: 'Unable to connect to AI service. Please check your internet connection.' 
+            });
+        }
+        
+        res.status(500).json({ 
+            error: 'An error occurred while processing your request. Please try again.' 
+        });
     }
 };
