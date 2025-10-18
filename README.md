@@ -12,7 +12,8 @@ A state-of-the-art language learning application powered by GPT-4, featuring mod
 - **5 Supported Languages**: English, Spanish, French, German, and Portuguese
 - **AI-Powered Tutoring**: Advanced GPT-4 integration with contextual understanding
 - **Conversation History**: Maintains context across the entire conversation
-- **Voice Integration**: Speech recognition and text-to-speech for immersive learning
+- **Advanced Voice Integration**: Professional speech recognition with real-time visualization
+- **Smart TTS Engine**: Customizable voice, speed, pitch, and volume controls
 - **Offline Persistence**: Conversations saved locally, resume anytime
 
 ### 🎨 Learning Modes
@@ -42,6 +43,33 @@ A state-of-the-art language learning application powered by GPT-4, featuring mod
    - CEFR level estimation (A1-C2)
    - Personalized recommendations
 
+### 🎤 Advanced Voice Features
+
+#### Voice Recognition
+- **Real-time Audio Visualization**: Beautiful waveform display while recording
+- **Voice Level Indicator**: Visual feedback of microphone input volume
+- **Recording Timer**: Track your recording duration
+- **Continuous Listening Mode**: Hands-free conversation practice
+- **Keyboard Shortcuts**: Quick access with `Ctrl+Space`
+- **Multi-language Support**: Automatic language switching
+- **Error Handling**: Clear feedback for recognition issues
+
+#### Text-to-Speech Controls
+- **Voice Selection**: Choose from 100+ system voices
+- **Speech Rate**: Adjustable from 0.5x to 2x speed
+- **Pitch Control**: Customize voice pitch (0.5 to 2.0)
+- **Volume Control**: Fine-tune audio output
+- **Auto-play Responses**: Optional automatic voice responses
+- **Voice Notifications**: Audio feedback for actions
+- **Language-specific Voices**: Auto-select appropriate accent
+
+#### Professional Recording Interface
+- **Animated Recording Panel**: Sleek UI when listening
+- **Pulsing Indicator**: Visual recording status
+- **Cancel/Stop Controls**: Full control over recording
+- **Audio Waveform Canvas**: Real-time frequency visualization
+- **Volume Level Bar**: Monitor input sensitivity
+
 ### 💎 Modern UI/UX Features
 
 #### Visual Design
@@ -62,10 +90,11 @@ A state-of-the-art language learning application powered by GPT-4, featuring mod
 #### Advanced Features
 - **Message Formatting**: Supports bold, italic, and code formatting
 - **Copy to Clipboard**: One-click message copying
-- **Voice Controls**: Microphone button with visual feedback
+- **Professional Voice Suite**: Complete recording studio experience
 - **Language Switching**: Seamlessly switch between languages
 - **Session Management**: Clear chat, restart conversations
-- **Settings Panel**: Customize TTS, timestamps, and theme
+- **Dual Settings Panels**: General settings + dedicated voice settings
+- **Keyboard Shortcuts**: Power user productivity features
 
 ## 🛠️ Technical Stack
 
@@ -170,7 +199,36 @@ Success Gradient: #43e97b → #38f9d7 (Green)
 1. **Select a Language**: Click on your target language from the sidebar
 2. **Choose a Mode**: Select from 5 learning modes based on your goals
 3. **Start Learning**: Type a question or use conversation starters
-4. **Use Voice**: Click the microphone to practice speaking
+4. **Use Voice**: Click the microphone or press `Ctrl+Space` to practice speaking
+
+### Voice Features Guide
+
+#### Basic Voice Input
+1. Click the microphone button or press `Ctrl+Space`
+2. Speak clearly in your selected language
+3. The recording panel shows real-time audio visualization
+4. Click "Stop & Send" or let it auto-detect silence
+5. Your speech is converted to text and sent automatically
+
+#### Continuous Listening Mode
+1. Click the circular arrow icon next to the microphone
+2. The system will continuously listen after each response
+3. Perfect for extended conversation practice
+4. Click again to disable
+
+#### Voice Settings
+1. Click the sliders icon to open voice settings
+2. **Choose Your Voice**: Select from available system voices
+3. **Adjust Speed**: Slow down or speed up responses (0.5x - 2x)
+4. **Change Pitch**: Make voice higher or lower pitched
+5. **Set Volume**: Control audio output level
+6. **Test Voice**: Preview your settings with sample text
+7. **Enable Features**: Toggle auto-play, continuous mode, notifications
+
+#### Keyboard Shortcuts
+- `Enter`: Send message
+- `Ctrl+Space`: Start/stop voice recording
+- `Escape`: Cancel voice recording
 
 ### Tips for Best Results
 - Be specific with your questions
@@ -208,6 +266,14 @@ Access settings via the gear icon in the header:
 - **Timestamps**: Show/hide message timestamps
 - **Dark Mode**: Toggle between dark and light themes
 
+### Voice Settings Storage
+All voice preferences are saved to localStorage:
+- Speech rate, pitch, and volume
+- Selected voice preference
+- Continuous listening state
+- Auto-play preferences
+- Voice notification settings
+
 ### Customization
 
 Modify CSS variables in `style.css`:
@@ -238,17 +304,24 @@ Modify CSS variables in `style.css`:
 - ✅ Copy and replay message actions
 - ✅ Typing indicators
 - ✅ Improved mobile experience
-- ✅ Settings panel
+- ✅ Dual settings panels (General + Voice)
 - ✅ Theme switching
+- ✅ Keyboard shortcuts
+- ✅ Professional voice interface
 
 ### Technical Improvements
 - ✅ Conversation context management
-- ✅ LocalStorage persistence
-- ✅ Better error handling
+- ✅ LocalStorage persistence (conversations + voice settings)
+- ✅ Better error handling with user-friendly messages
 - ✅ Optimized API usage
 - ✅ Mode-specific AI instructions
 - ✅ Enhanced system prompts
 - ✅ Better code organization
+- ✅ Web Audio API integration
+- ✅ Canvas-based audio visualization
+- ✅ Advanced voice synthesis controls
+- ✅ Continuous listening architecture
+- ✅ Notification sound system
 
 ## 🤝 Contributing
 
@@ -277,14 +350,27 @@ For support, email support@learnwg.com or visit [LearnWG](https://learnwg.vercel
 
 ## 🗺️ Roadmap
 
+### Voice & Audio
+- [ ] Voice activity detection (VAD)
+- [ ] Pronunciation scoring and feedback
+- [ ] Audio playback with waveform
+- [ ] Voice recording history
+- [ ] Custom wake words
+
+### Learning Features
 - [ ] User authentication and profiles
 - [ ] Progress tracking and analytics
-- [ ] Flashcard system
-- [ ] Gamification elements
+- [ ] Flashcard system with spaced repetition
+- [ ] Gamification elements and achievements
 - [ ] Social features (practice with peers)
 - [ ] More languages (Italian, Japanese, Chinese, etc.)
+
+### Technical
 - [ ] Mobile app (React Native)
 - [ ] Offline mode with cached lessons
+- [ ] PWA support with offline capabilities
+- [ ] WebRTC for real-time practice sessions
+- [ ] Advanced speech analytics
 
 ---
 

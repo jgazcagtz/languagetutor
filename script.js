@@ -7,9 +7,25 @@ const state = {
     settings: {
         ttsEnabled: true,
         timestampsEnabled: true,
-        darkMode: true
+        darkMode: true,
+        autoPlay: true,
+        voiceNotifications: true
     },
-    isProcessing: false
+    voiceSettings: {
+        rate: 0.9,
+        pitch: 1.0,
+        volume: 1.0,
+        selectedVoice: null,
+        continuousListening: false
+    },
+    isProcessing: false,
+    isRecording: false,
+    recordingStartTime: null,
+    recordingTimer: null,
+    audioContext: null,
+    analyser: null,
+    microphone: null,
+    animationId: null
 };
 
 // ==================== CONVERSATION STARTERS ====================
@@ -46,6 +62,14 @@ const conversationStarters = {
     ]
 };
 
+const languageNames = {
+    'en-US': 'English',
+    'es-ES': 'Spanish',
+    'fr-FR': 'French',
+    'de-DE': 'German',
+    'pt-PT': 'Portuguese'
+};
+
 // Mode configurations
 const modeConfig = {
     conversation: {
@@ -78,8 +102,11 @@ const modeConfig = {
 // ==================== INITIALIZATION ====================
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
+    loadVoiceSettings();
     initializeEventListeners();
+    initializeVoices();
     loadConversationHistory();
+    setupKeyboardShortcuts();
 });
 
 function initializeEventListeners() {
@@ -122,6 +149,20 @@ function initializeEventListeners() {
     });
 }
 
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        // Ctrl+Space for voice input
+        if (e.ctrlKey && e.code === 'Space') {
+            e.preventDefault();
+            toggleVoiceRecognition();
+        }
+        // Escape to cancel voice recording
+        if (e.key === 'Escape' && state.isRecording) {
+            cancelVoiceRecording();
+        }
+    });
+}
+
 // ==================== LANGUAGE SELECTION ====================
 function selectLanguage(langCode, langName) {
     state.selectedLanguageCode = langCode;
@@ -143,6 +184,9 @@ function selectLanguage(langCode, langName) {
     if (recognition) {
         recognition.lang = langCode;
     }
+
+    // Update voice settings display
+    updateRecognitionLanguageDisplay();
 
     // Clear previous conversation when switching languages
     if (state.conversationHistory.length > 0) {
@@ -273,8 +317,17 @@ async function sendMessage(messageText = null) {
         addBotMessage(data.response);
 
         // Text-to-speech
-        if (state.settings.ttsEnabled) {
+        if (state.settings.autoPlay && state.settings.ttsEnabled) {
             speakText(data.response);
+        }
+
+        // Continue listening if continuous mode is on
+        if (state.voiceSettings.continuousListening && recognition && !state.isRecording) {
+            setTimeout(() => {
+                if (state.voiceSettings.continuousListening) {
+                    toggleVoiceRecognition();
+                }
+            }, 1000);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -407,7 +460,7 @@ function hideTypingIndicator() {
     document.getElementById('typing-indicator').style.display = 'none';
 }
 
-// ==================== VOICE RECOGNITION ====================
+// ==================== ADVANCED VOICE RECOGNITION ====================
 let recognition;
 let recognizing = false;
 
@@ -420,6 +473,11 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
     recognition.onstart = () => {
         recognizing = true;
+        state.isRecording = true;
+        showRecordingPanel();
+        startRecordingTimer();
+        startAudioVisualization();
+        
         const micBtn = document.getElementById('mic-button');
         micBtn.classList.add('recording');
         micBtn.innerHTML = '<i class="fas fa-stop"></i>';
@@ -427,6 +485,11 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
     recognition.onend = () => {
         recognizing = false;
+        state.isRecording = false;
+        hideRecordingPanel();
+        stopRecordingTimer();
+        stopAudioVisualization();
+        
         const micBtn = document.getElementById('mic-button');
         micBtn.classList.remove('recording');
         micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
@@ -434,6 +497,12 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 
     recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
+        const confidence = event.results[0][0].confidence;
+        
+        if (state.settings.voiceNotifications) {
+            playNotificationSound('success');
+        }
+        
         document.getElementById('user-input').value = transcript;
         sendMessage();
     };
@@ -441,19 +510,32 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     recognition.onerror = (event) => {
         console.error('Speech recognition error:', event.error);
         recognizing = false;
+        state.isRecording = false;
+        hideRecordingPanel();
+        stopRecordingTimer();
+        stopAudioVisualization();
+        
         const micBtn = document.getElementById('mic-button');
         micBtn.classList.remove('recording');
         micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
         
         if (event.error === 'no-speech') {
             addSystemMessage('No speech detected. Please try again.');
+        } else if (event.error === 'audio-capture') {
+            addSystemMessage('No microphone detected. Please check your microphone.');
+        } else if (event.error !== 'aborted') {
+            addSystemMessage(`Voice recognition error: ${event.error}`);
+        }
+        
+        if (state.settings.voiceNotifications) {
+            playNotificationSound('error');
         }
     };
 }
 
 function toggleVoiceRecognition() {
     if (!recognition) {
-        alert('Voice recognition is not supported in your browser.');
+        alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
         return;
     }
 
@@ -471,7 +553,157 @@ function toggleVoiceRecognition() {
     recognition.start();
 }
 
-// ==================== TEXT-TO-SPEECH ====================
+function cancelVoiceRecording() {
+    if (recognition && recognizing) {
+        recognition.abort();
+    }
+}
+
+function stopVoiceRecording() {
+    if (recognition && recognizing) {
+        recognition.stop();
+    }
+}
+
+// ==================== CONTINUOUS LISTENING MODE ====================
+function toggleContinuousMode() {
+    state.voiceSettings.continuousListening = !state.voiceSettings.continuousListening;
+    
+    const btn = document.getElementById('continuous-mode-btn');
+    if (state.voiceSettings.continuousListening) {
+        btn.classList.add('recording');
+        btn.style.background = 'var(--success-gradient)';
+        addSystemMessage('Continuous listening mode enabled');
+        
+        // Start listening if not already
+        if (!recognizing && state.selectedLanguageCode) {
+            toggleVoiceRecognition();
+        }
+    } else {
+        btn.classList.remove('recording');
+        btn.style.background = '';
+        addSystemMessage('Continuous listening mode disabled');
+    }
+    
+    // Sync with settings modal
+    document.getElementById('continuous-listening-toggle').checked = state.voiceSettings.continuousListening;
+    saveVoiceSettings();
+}
+
+// ==================== RECORDING PANEL UI ====================
+function showRecordingPanel() {
+    const panel = document.getElementById('voice-recording-panel');
+    const langName = languageNames[state.selectedLanguageCode] || 'the selected language';
+    document.getElementById('recording-language').textContent = langName;
+    panel.style.display = 'block';
+    state.recordingStartTime = Date.now();
+}
+
+function hideRecordingPanel() {
+    document.getElementById('voice-recording-panel').style.display = 'none';
+}
+
+function startRecordingTimer() {
+    state.recordingStartTime = Date.now();
+    state.recordingTimer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - state.recordingStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        document.getElementById('recording-timer').textContent = 
+            `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function stopRecordingTimer() {
+    if (state.recordingTimer) {
+        clearInterval(state.recordingTimer);
+        state.recordingTimer = null;
+    }
+}
+
+// ==================== AUDIO VISUALIZATION ====================
+async function startAudioVisualization() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        state.analyser = state.audioContext.createAnalyser();
+        state.microphone = state.audioContext.createMediaStreamSource(stream);
+        
+        state.analyser.fftSize = 256;
+        state.microphone.connect(state.analyser);
+        
+        visualizeAudio();
+    } catch (error) {
+        console.error('Error accessing microphone for visualization:', error);
+    }
+}
+
+function visualizeAudio() {
+    const canvas = document.getElementById('voice-canvas');
+    const canvasContext = canvas.getContext('2d');
+    const bufferLength = state.analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    const draw = () => {
+        if (!state.isRecording) return;
+        
+        state.animationId = requestAnimationFrame(draw);
+        
+        state.analyser.getByteFrequencyData(dataArray);
+        
+        // Clear canvas
+        canvasContext.fillStyle = 'rgba(26, 26, 46, 0.3)';
+        canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw waveform
+        const barWidth = (canvas.width / bufferLength) * 2.5;
+        let barHeight;
+        let x = 0;
+        
+        for (let i = 0; i < bufferLength; i++) {
+            barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+            
+            // Gradient color
+            const gradient = canvasContext.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            
+            canvasContext.fillStyle = gradient;
+            canvasContext.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+            
+            x += barWidth + 1;
+        }
+        
+        // Update volume level bar
+        const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+        const level = (average / 255) * 100;
+        document.getElementById('voice-level-fill').style.width = level + '%';
+    };
+    
+    draw();
+}
+
+function stopAudioVisualization() {
+    if (state.animationId) {
+        cancelAnimationFrame(state.animationId);
+        state.animationId = null;
+    }
+    
+    if (state.microphone) {
+        state.microphone.disconnect();
+        state.microphone = null;
+    }
+    
+    if (state.audioContext) {
+        state.audioContext.close();
+        state.audioContext = null;
+    }
+    
+    document.getElementById('voice-level-fill').style.width = '0%';
+}
+
+// ==================== TEXT-TO-SPEECH WITH ADVANCED SETTINGS ====================
 function speakText(text) {
     if (!state.settings.ttsEnabled || !('speechSynthesis' in window)) {
         return;
@@ -481,26 +713,190 @@ function speakText(text) {
     speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
+    utterance.rate = state.voiceSettings.rate;
+    utterance.pitch = state.voiceSettings.pitch;
+    utterance.volume = state.voiceSettings.volume;
 
-    // Set voice based on selected language
+    // Set voice based on settings
     const voices = speechSynthesis.getVoices();
     if (voices.length > 0) {
-        const voice = voices.find(v => v.lang === state.selectedLanguageCode) ||
-                     voices.find(v => v.lang.startsWith(state.selectedLanguageCode?.split('-')[0])) ||
-                     voices[0];
-        utterance.voice = voice;
+        if (state.voiceSettings.selectedVoice) {
+            const voice = voices.find(v => v.name === state.voiceSettings.selectedVoice);
+            if (voice) {
+                utterance.voice = voice;
+            }
+        }
+        
+        // Fallback to language-appropriate voice
+        if (!utterance.voice && state.selectedLanguageCode) {
+            const voice = voices.find(v => v.lang === state.selectedLanguageCode) ||
+                         voices.find(v => v.lang.startsWith(state.selectedLanguageCode?.split('-')[0]));
+            if (voice) utterance.voice = voice;
+        }
     }
 
     speechSynthesis.speak(utterance);
 }
 
-// Ensure voices are loaded
-if ('speechSynthesis' in window) {
-    speechSynthesis.onvoiceschanged = () => {
-        speechSynthesis.getVoices();
+// Initialize voices
+function initializeVoices() {
+    if ('speechSynthesis' in window) {
+        speechSynthesis.onvoiceschanged = () => {
+            populateVoiceList();
+        };
+        // Initial population
+        setTimeout(populateVoiceList, 100);
+    }
+}
+
+function populateVoiceList() {
+    const voiceSelect = document.getElementById('voice-select');
+    if (!voiceSelect) return;
+    
+    const voices = speechSynthesis.getVoices();
+    voiceSelect.innerHTML = '<option value="">Auto (Default)</option>';
+    
+    voices.forEach(voice => {
+        const option = document.createElement('option');
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        if (voice.name === state.voiceSettings.selectedVoice) {
+            option.selected = true;
+        }
+        voiceSelect.appendChild(option);
+    });
+}
+
+// ==================== VOICE SETTINGS ====================
+function openVoiceSettings() {
+    document.getElementById('voice-settings-modal').classList.add('show');
+    updateRecognitionLanguageDisplay();
+}
+
+function closeVoiceSettings() {
+    document.getElementById('voice-settings-modal').classList.remove('show');
+}
+
+function updateSelectedVoice() {
+    const select = document.getElementById('voice-select');
+    state.voiceSettings.selectedVoice = select.value || null;
+    saveVoiceSettings();
+}
+
+function updateSpeechRate(value) {
+    state.voiceSettings.rate = parseFloat(value);
+    document.getElementById('rate-value').textContent = value + 'x';
+    saveVoiceSettings();
+}
+
+function updateSpeechPitch(value) {
+    state.voiceSettings.pitch = parseFloat(value);
+    document.getElementById('pitch-value').textContent = value;
+    saveVoiceSettings();
+}
+
+function updateSpeechVolume(value) {
+    state.voiceSettings.volume = parseFloat(value);
+    document.getElementById('volume-value').textContent = Math.round(value * 100) + '%';
+    saveVoiceSettings();
+}
+
+function updateContinuousListening() {
+    const enabled = document.getElementById('continuous-listening-toggle').checked;
+    if (enabled !== state.voiceSettings.continuousListening) {
+        toggleContinuousMode();
+    }
+}
+
+function updateAutoPlaySetting() {
+    state.settings.autoPlay = document.getElementById('auto-play-setting-toggle').checked;
+    document.getElementById('auto-play-toggle').checked = state.settings.autoPlay;
+    saveSettings();
+}
+
+function updateVoiceNotifications() {
+    state.settings.voiceNotifications = document.getElementById('voice-notifications-toggle').checked;
+    saveSettings();
+}
+
+function updateRecognitionLanguageDisplay() {
+    const langName = languageNames[state.selectedLanguageCode] || 'Not selected';
+    const elem = document.getElementById('current-recognition-lang');
+    if (elem) {
+        elem.textContent = langName;
+    }
+}
+
+function testVoice() {
+    const messages = {
+        'en-US': 'Hello! This is a test of the selected voice.',
+        'es-ES': '¡Hola! Esta es una prueba de la voz seleccionada.',
+        'fr-FR': 'Bonjour! Ceci est un test de la voix sélectionnée.',
+        'de-DE': 'Hallo! Dies ist ein Test der ausgewählten Stimme.',
+        'pt-PT': 'Olá! Este é um teste da voz selecionada.'
     };
+    
+    const message = messages[state.selectedLanguageCode] || messages['en-US'];
+    speakText(message);
+}
+
+function resetVoiceSettings() {
+    if (confirm('Reset all voice settings to defaults?')) {
+        state.voiceSettings = {
+            rate: 0.9,
+            pitch: 1.0,
+            volume: 1.0,
+            selectedVoice: null,
+            continuousListening: false
+        };
+        
+        // Update UI
+        document.getElementById('speech-rate').value = 0.9;
+        document.getElementById('rate-value').textContent = '0.9x';
+        document.getElementById('speech-pitch').value = 1.0;
+        document.getElementById('pitch-value').textContent = '1.0';
+        document.getElementById('speech-volume').value = 1.0;
+        document.getElementById('volume-value').textContent = '100%';
+        document.getElementById('voice-select').value = '';
+        document.getElementById('continuous-listening-toggle').checked = false;
+        
+        // Update continuous mode button
+        const btn = document.getElementById('continuous-mode-btn');
+        btn.classList.remove('recording');
+        btn.style.background = '';
+        
+        saveVoiceSettings();
+        addSystemMessage('Voice settings reset to defaults');
+    }
+}
+
+function toggleAutoPlay() {
+    state.settings.autoPlay = document.getElementById('auto-play-toggle').checked;
+    document.getElementById('auto-play-setting-toggle').checked = state.settings.autoPlay;
+    saveSettings();
+}
+
+// ==================== NOTIFICATION SOUNDS ====================
+function playNotificationSound(type) {
+    // Using Web Audio API to generate simple tones
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    if (type === 'success') {
+        oscillator.frequency.value = 800;
+        gainNode.gain.value = 0.1;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } else if (type === 'error') {
+        oscillator.frequency.value = 400;
+        gainNode.gain.value = 0.1;
+        oscillator.start();
+        oscillator.stop(audioContext.currentTime + 0.2);
+    }
 }
 
 // ==================== SETTINGS ====================
@@ -534,12 +930,34 @@ function loadSettings() {
         document.getElementById('tts-toggle').checked = state.settings.ttsEnabled;
         document.getElementById('timestamp-toggle').checked = state.settings.timestampsEnabled;
         document.getElementById('theme-toggle').checked = state.settings.darkMode;
+        document.getElementById('auto-play-toggle').checked = state.settings.autoPlay;
         document.body.classList.toggle('light-theme', !state.settings.darkMode);
     }
 }
 
 function saveSettings() {
     localStorage.setItem('languageTutorSettings', JSON.stringify(state.settings));
+}
+
+function loadVoiceSettings() {
+    const saved = localStorage.getItem('languageTutorVoiceSettings');
+    if (saved) {
+        state.voiceSettings = { ...state.voiceSettings, ...JSON.parse(saved) };
+        
+        // Apply to UI when modal opens
+        setTimeout(() => {
+            document.getElementById('speech-rate').value = state.voiceSettings.rate;
+            document.getElementById('rate-value').textContent = state.voiceSettings.rate + 'x';
+            document.getElementById('speech-pitch').value = state.voiceSettings.pitch;
+            document.getElementById('pitch-value').textContent = state.voiceSettings.pitch;
+            document.getElementById('speech-volume').value = state.voiceSettings.volume;
+            document.getElementById('volume-value').textContent = Math.round(state.voiceSettings.volume * 100) + '%';
+        }, 100);
+    }
+}
+
+function saveVoiceSettings() {
+    localStorage.setItem('languageTutorVoiceSettings', JSON.stringify(state.voiceSettings));
 }
 
 // ==================== CONVERSATION PERSISTENCE ====================
@@ -556,7 +974,6 @@ function loadConversationHistory() {
         const saved = localStorage.getItem(key);
         if (saved) {
             state.conversationHistory = JSON.parse(saved);
-            // Optionally restore messages to UI
         }
     }
 }

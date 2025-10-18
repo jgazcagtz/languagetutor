@@ -114,8 +114,8 @@
                         <i class="fas fa-cog"></i>
                     </button>
                 </div>
-            </header>
-
+        </header>
+        
             <!-- Welcome Screen -->
             <div class="welcome-screen" id="welcome-screen">
                 <div class="welcome-content">
@@ -179,23 +179,77 @@
                     <span>Conversation Mode</span>
                 </div>
 
+                <!-- Voice Recording Panel (shown when recording) -->
+                <div class="voice-recording-panel" id="voice-recording-panel" style="display: none;">
+                    <div class="recording-header">
+                        <div class="recording-status">
+                            <div class="recording-pulse"></div>
+                            <span>Listening...</span>
+                        </div>
+                        <span class="recording-timer" id="recording-timer">0:00</span>
+                    </div>
+                    
+                    <div class="voice-visualizer">
+                        <canvas id="voice-canvas" width="600" height="100"></canvas>
+                    </div>
+                    
+                    <div class="voice-level-container">
+                        <i class="fas fa-volume-down"></i>
+                        <div class="voice-level-bar">
+                            <div class="voice-level-fill" id="voice-level-fill"></div>
+                        </div>
+                        <i class="fas fa-volume-up"></i>
+                    </div>
+
+                    <div class="recording-actions">
+                        <button class="recording-btn cancel-btn" onclick="cancelVoiceRecording()">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                        <button class="recording-btn stop-btn" onclick="stopVoiceRecording()">
+                            <i class="fas fa-stop"></i>
+                            Stop & Send
+                        </button>
+                    </div>
+
+                    <p class="recording-hint">Speak clearly in <span id="recording-language">the selected language</span></p>
+        </div>
+        
                 <div class="input-wrapper">
-                    <button class="input-action-btn" id="mic-button" onclick="toggleVoiceRecognition()" title="Voice Input">
-                        <i class="fas fa-microphone"></i>
-                    </button>
+                    <div class="voice-controls">
+                        <button class="input-action-btn" id="mic-button" onclick="toggleVoiceRecognition()" title="Voice Input (Ctrl+Space)">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                        <button class="input-action-btn" id="continuous-mode-btn" onclick="toggleContinuousMode()" title="Continuous Listening Mode">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="input-action-btn" id="voice-settings-btn" onclick="openVoiceSettings()" title="Voice Settings">
+                            <i class="fas fa-sliders-h"></i>
+                        </button>
+                    </div>
                     <input 
                         type="text" 
                         id="user-input" 
-                        placeholder="Type your message..." 
+                        placeholder="Type your message or use voice input..." 
                         autocomplete="off"
                     />
-                    <button class="send-btn" onclick="sendMessage()" title="Send Message">
+                    <button class="send-btn" onclick="sendMessage()" title="Send Message (Enter)">
                         <i class="fas fa-paper-plane"></i>
                     </button>
-                </div>
+        </div>
 
                 <div class="input-footer">
-                    <span class="shortcut-hint">Press Enter to send</span>
+                    <div class="footer-left">
+                        <span class="shortcut-hint">
+                            <kbd>Enter</kbd> to send • <kbd>Ctrl+Space</kbd> for voice
+                        </span>
+                    </div>
+                    <div class="footer-right">
+                        <label class="auto-play-toggle">
+                            <input type="checkbox" id="auto-play-toggle" checked onchange="toggleAutoPlay()">
+                            <span>Auto-play responses</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </main>
@@ -331,6 +385,151 @@
                         <span class="toggle-slider"></span>
                     </label>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Settings Modal -->
+    <div id="voice-settings-modal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeVoiceSettings()">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <div class="modal-header">
+                <i class="fas fa-microphone-alt"></i>
+                <h2>Voice Settings</h2>
+            </div>
+
+            <div class="modal-body">
+                <!-- Voice Selection -->
+                <div class="voice-setting-group">
+                    <h3><i class="fas fa-user-circle"></i> Voice Selection</h3>
+                    <div class="setting-item-vertical">
+                        <label for="voice-select">Choose Voice</label>
+                        <select id="voice-select" onchange="updateSelectedVoice()">
+                            <option value="">Default</option>
+                        </select>
+                        <button class="test-voice-btn" onclick="testVoice()">
+                            <i class="fas fa-play"></i> Test Voice
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Speech Rate -->
+                <div class="voice-setting-group">
+                    <h3><i class="fas fa-tachometer-alt"></i> Speech Rate</h3>
+                    <div class="setting-item-vertical">
+                        <div class="slider-header">
+                            <label>Speed</label>
+                            <span id="rate-value">1.0x</span>
+                        </div>
+                        <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="0.9" oninput="updateSpeechRate(this.value)">
+                        <div class="slider-labels">
+                            <span>Slower</span>
+                            <span>Normal</span>
+                            <span>Faster</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Speech Pitch -->
+                <div class="voice-setting-group">
+                    <h3><i class="fas fa-wave-square"></i> Speech Pitch</h3>
+                    <div class="setting-item-vertical">
+                        <div class="slider-header">
+                            <label>Pitch</label>
+                            <span id="pitch-value">1.0</span>
+                        </div>
+                        <input type="range" id="speech-pitch" min="0.5" max="2" step="0.1" value="1" oninput="updateSpeechPitch(this.value)">
+                        <div class="slider-labels">
+                            <span>Lower</span>
+                            <span>Normal</span>
+                            <span>Higher</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Volume -->
+                <div class="voice-setting-group">
+                    <h3><i class="fas fa-volume-up"></i> Volume</h3>
+                    <div class="setting-item-vertical">
+                        <div class="slider-header">
+                            <label>Volume</label>
+                            <span id="volume-value">100%</span>
+                        </div>
+                        <input type="range" id="speech-volume" min="0" max="1" step="0.1" value="1" oninput="updateSpeechVolume(this.value)">
+                        <div class="slider-labels">
+                            <span>Quiet</span>
+                            <span>Medium</span>
+                            <span>Loud</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voice Features -->
+                <div class="voice-setting-group">
+                    <h3><i class="fas fa-magic"></i> Voice Features</h3>
+                    
+                    <div class="setting-item">
+                        <label>
+                            <i class="fas fa-infinity"></i>
+                            Continuous Listening
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="continuous-listening-toggle" onchange="updateContinuousListening()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>
+                            <i class="fas fa-play-circle"></i>
+                            Auto-play Responses
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="auto-play-setting-toggle" checked onchange="updateAutoPlaySetting()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="setting-item">
+                        <label>
+                            <i class="fas fa-bell"></i>
+                            Voice Notifications
+                        </label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="voice-notifications-toggle" checked onchange="updateVoiceNotifications()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Recognition Settings -->
+                <div class="voice-setting-group">
+                    <h3><i class="fas fa-microphone"></i> Recognition Settings</h3>
+                    
+                    <div class="setting-item-vertical">
+                        <label>Recognition Language</label>
+                        <p class="setting-description">
+                            Currently using: <strong id="current-recognition-lang">Not selected</strong>
+                        </p>
+                        <p class="setting-hint">
+                            <i class="fas fa-info-circle"></i> 
+                            Recognition language changes automatically when you select a learning language
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="secondary-btn" onclick="resetVoiceSettings()">
+                    <i class="fas fa-undo"></i>
+                    Reset to Defaults
+                </button>
+                <button class="cta-button" onclick="closeVoiceSettings()">
+                    Done
+                </button>
             </div>
         </div>
     </div>
