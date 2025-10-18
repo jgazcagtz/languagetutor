@@ -316,19 +316,29 @@ async function sendMessage(messageText = null) {
     const userInput = document.getElementById('user-input');
     const message = messageText || userInput.value.trim();
 
-    if (!message) return;
+    if (!message) {
+        // Shake input if empty
+        userInput.classList.add('shake');
+        setTimeout(() => userInput.classList.remove('shake'), 500);
+        return;
+    }
 
     if (!state.selectedLanguageCode) {
         alert('Please select a language first!');
         return;
     }
 
+    // Send button animation
+    const sendBtn = document.querySelector('.send-btn');
+    sendBtn.classList.add('sending');
+    setTimeout(() => sendBtn.classList.remove('sending'), 600);
+
     // Clear input
     if (!messageText) {
         userInput.value = '';
     }
 
-    // Add user message to UI
+    // Add user message to UI with animation
     addUserMessage(message);
 
     // Add to conversation history
@@ -373,9 +383,9 @@ async function sendMessage(messageText = null) {
         // Add bot message to UI
         addBotMessage(data.response);
 
-        // Text-to-speech
+        // Text-to-speech with OpenAI
         if (state.settings.autoPlay && state.settings.ttsEnabled) {
-        speakText(data.response);
+            await speakText(data.response);
         }
 
         // Continue listening if continuous mode is on
@@ -399,19 +409,19 @@ async function sendMessage(messageText = null) {
 function addUserMessage(text) {
     const chatLog = document.getElementById('chat-log');
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message user-message';
+    messageDiv.className = 'message user-message slide-in-right';
 
     const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
 
     messageDiv.innerHTML = `
-        <div class="message-avatar">👤</div>
-        <div class="message-content">
+        <div class="message-avatar float">👤</div>
+        <div class="message-content touch-ripple">
             <div class="message-text">${escapeHtml(text)}</div>
             ${timestamp ? `
                 <div class="message-footer">
                     <span class="message-time">${timestamp}</span>
                     <div class="message-actions">
-                        <button class="message-action-btn" onclick="copyMessage(this)" title="Copy">
+                        <button class="message-action-btn touch-ripple" onclick="copyMessage(this)" title="Copy">
                             <i class="fas fa-copy"></i>
                         </button>
                     </div>
@@ -422,27 +432,30 @@ function addUserMessage(text) {
 
     chatLog.appendChild(messageDiv);
     scrollToBottom();
+    
+    // Create particle effect
+    createParticles(messageDiv);
 }
 
 function addBotMessage(text) {
     const chatLog = document.getElementById('chat-log');
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message bot-message';
+    messageDiv.className = 'message bot-message slide-in-left';
 
     const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
 
     messageDiv.innerHTML = `
-        <div class="message-avatar">🤖</div>
-        <div class="message-content">
+        <div class="message-avatar float">🤖</div>
+        <div class="message-content touch-ripple">
             <div class="message-text">${formatBotMessage(text)}</div>
             ${timestamp ? `
                 <div class="message-footer">
                     <span class="message-time">${timestamp}</span>
                     <div class="message-actions">
-                        <button class="message-action-btn" onclick="copyMessage(this)" title="Copy">
+                        <button class="message-action-btn touch-ripple" onclick="copyMessage(this)" title="Copy">
                             <i class="fas fa-copy"></i>
                         </button>
-                        <button class="message-action-btn" onclick="speakMessage(this)" title="Speak">
+                        <button class="message-action-btn touch-ripple" onclick="speakMessage(this)" title="Speak">
                             <i class="fas fa-volume-up"></i>
                         </button>
                     </div>
@@ -453,6 +466,9 @@ function addBotMessage(text) {
 
     chatLog.appendChild(messageDiv);
     scrollToBottom();
+    
+    // Create particle effect
+    createParticles(messageDiv);
 }
 
 function formatBotMessage(text) {
@@ -496,9 +512,17 @@ function copyMessage(button) {
     navigator.clipboard.writeText(messageText).then(() => {
         const originalHtml = button.innerHTML;
         button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.add('success-check');
+        
+        // Show success feedback
+        showToast('Copied to clipboard!', 'success');
+        
         setTimeout(() => {
             button.innerHTML = originalHtml;
+            button.classList.remove('success-check');
         }, 2000);
+    }).catch(err => {
+        showToast('Failed to copy', 'error');
     });
 }
 
@@ -833,8 +857,14 @@ async function speakText(text) {
 
 // Fallback to browser TTS if OpenAI fails
 function fallbackBrowserTTS(text) {
-    if (!('speechSynthesis' in window)) return;
+    console.warn('Falling back to browser TTS - OpenAI TTS unavailable');
     
+    if (!('speechSynthesis' in window)) {
+        console.error('Browser TTS also unavailable');
+        showToast('Text-to-speech unavailable', 'error');
+        return;
+    }
+
     speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.rate = state.voiceSettings.rate;
@@ -847,7 +877,10 @@ function fallbackBrowserTTS(text) {
                      voices.find(v => v.lang.startsWith(state.selectedLanguageCode?.split('-')[0]));
         if (voice) utterance.voice = voice;
     }
-
+    
+    // Show warning that we're using browser TTS
+    showToast('Using browser voice (OpenAI TTS offline)', 'info');
+    
             speechSynthesis.speak(utterance);
 }
 
@@ -1170,6 +1203,153 @@ document.addEventListener('click', (e) => {
 document.querySelectorAll('.modal-content').forEach(modal => {
     modal.addEventListener('click', (e) => {
         e.stopPropagation();
+    });
+});
+
+// ==================== COOL ANIMATIONS & EFFECTS ====================
+
+// Particle effect generator
+function createParticles(element) {
+    const rect = element.getBoundingClientRect();
+    const particleCount = 5;
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = rect.left + rect.width / 2 + 'px';
+        particle.style.top = rect.top + rect.height / 2 + 'px';
+        particle.style.setProperty('--tx', (Math.random() - 0.5) * 100 + 'px');
+        particle.style.setProperty('--ty', (Math.random() - 0.5) * 100 + 'px');
+        
+        document.body.appendChild(particle);
+        
+        setTimeout(() => particle.remove(), 2000);
+    }
+}
+
+// Toast notification system
+function showToast(message, type = 'info') {
+    const existingToast = document.querySelector('.toast');
+    if (existingToast) existingToast.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type} slide-in-right`;
+    toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Long press detection for mobile
+function setupLongPress(element, callback) {
+    let pressTimer;
+    
+    element.addEventListener('touchstart', (e) => {
+        pressTimer = setTimeout(() => {
+            callback(e);
+            element.classList.add('long-press');
+            setTimeout(() => element.classList.remove('long-press'), 300);
+        }, 500);
+    });
+    
+    element.addEventListener('touchend', () => {
+        clearTimeout(pressTimer);
+    });
+    
+    element.addEventListener('touchmove', () => {
+        clearTimeout(pressTimer);
+    });
+}
+
+// Smooth scroll with easing
+function smoothScrollTo(element, duration = 500) {
+    const start = element.scrollTop;
+    const end = element.scrollHeight;
+    const change = end - start;
+    const startTime = performance.now();
+    
+    function easeInOutQuad(t) {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+    
+    function animateScroll(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeInOutQuad(progress);
+        
+        element.scrollTop = start + change * eased;
+        
+        if (progress < 1) {
+            requestAnimationFrame(animateScroll);
+        }
+    }
+    
+    requestAnimationFrame(animateScroll);
+}
+
+// Enhanced scroll to bottom with smooth animation
+function scrollToBottom() {
+    const chatArea = document.getElementById('chat-area');
+    smoothScrollTo(chatArea, 300);
+}
+
+// Confetti effect for celebrations
+function createConfetti() {
+    const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+    const confettiCount = 50;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.position = 'fixed';
+        confetti.style.width = '10px';
+        confetti.style.height = '10px';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.top = '-10px';
+        confetti.style.opacity = '1';
+        confetti.style.transform = 'rotate(0deg)';
+        confetti.style.transition = 'all 3s ease-out';
+        confetti.style.zIndex = '10000';
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        
+        document.body.appendChild(confetti);
+        
+        setTimeout(() => {
+            confetti.style.top = window.innerHeight + 'px';
+            confetti.style.left = (parseInt(confetti.style.left) + (Math.random() - 0.5) * 200) + 'px';
+            confetti.style.opacity = '0';
+            confetti.style.transform = 'rotate(' + (Math.random() * 720) + 'deg)';
+        }, 50);
+        
+        setTimeout(() => confetti.remove(), 3000);
+    }
+}
+
+// Haptic feedback for mobile (if supported)
+function triggerHaptic(type = 'light') {
+    if ('vibrate' in navigator) {
+        const patterns = {
+            light: 10,
+            medium: 20,
+            heavy: 30,
+            success: [10, 50, 10],
+            error: [20, 100, 20]
+        };
+        navigator.vibrate(patterns[type] || 10);
+    }
+}
+
+// Add touch ripple effect to buttons
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('button, .language-btn, .action-btn').forEach(button => {
+        button.classList.add('touch-ripple');
     });
 });
 
