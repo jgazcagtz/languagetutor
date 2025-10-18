@@ -2065,34 +2065,32 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* Slide In Animations */
 .slide-in-left {
-    animation: slideInLeft 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-    opacity: 0;
+    animation: slideInLeft 0.4s ease-out forwards !important;
 }
 
 @keyframes slideInLeft {
     from {
-        transform: translateX(-30px);
         opacity: 0;
+        transform: translateX(-20px);
     }
     to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateX(0);
     }
 }
 
 .slide-in-right {
-    animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
-    opacity: 0;
+    animation: slideInRight 0.4s ease-out forwards !important;
 }
 
 @keyframes slideInRight {
     from {
-        transform: translateX(30px);
         opacity: 0;
+        transform: translateX(20px);
     }
     to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateX(0);
     }
 }
 

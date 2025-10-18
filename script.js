@@ -470,6 +470,8 @@ function addUserMessage(text) {
     
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message user-message';
+    messageDiv.style.opacity = '1'; // Force visible
+    messageDiv.style.visibility = 'visible'; // Force visible
 
     const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
 
@@ -490,18 +492,23 @@ function addUserMessage(text) {
         </div>
     `;
 
-    // Append to DOM
+    // Append to DOM FIRST (ensure visibility)
     chatLog.appendChild(messageDiv);
     
-    // Trigger animation after DOM update
-    requestAnimationFrame(() => {
+    // Force reflow to ensure element is rendered
+    void messageDiv.offsetHeight;
+    
+    // Then add animation class
+    setTimeout(() => {
         messageDiv.classList.add('slide-in-right');
-        scrollToBottom();
-    });
+    }, 10);
+    
+    // Scroll after a delay to ensure visibility
+    setTimeout(() => scrollToBottom(), 50);
     
     // Create particle effect (skip on reduced motion)
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        setTimeout(() => createParticles(messageDiv), 100);
+        setTimeout(() => createParticles(messageDiv), 150);
     }
 }
 
@@ -514,6 +521,8 @@ function addBotMessage(text) {
     
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message bot-message';
+    messageDiv.style.opacity = '1'; // Force visible
+    messageDiv.style.visibility = 'visible'; // Force visible
 
     const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
 
@@ -537,18 +546,23 @@ function addBotMessage(text) {
         </div>
     `;
 
-    // Append to DOM
+    // Append to DOM FIRST (ensure visibility)
     chatLog.appendChild(messageDiv);
     
-    // Trigger animation after DOM update
-    requestAnimationFrame(() => {
+    // Force reflow to ensure element is rendered
+    void messageDiv.offsetHeight;
+    
+    // Then add animation class
+    setTimeout(() => {
         messageDiv.classList.add('slide-in-left');
-        scrollToBottom();
-    });
+    }, 10);
+    
+    // Scroll after a delay to ensure visibility
+    setTimeout(() => scrollToBottom(), 50);
     
     // Create particle effect (skip on reduced motion)
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        setTimeout(() => createParticles(messageDiv), 100);
+        setTimeout(() => createParticles(messageDiv), 150);
     }
 }
 
