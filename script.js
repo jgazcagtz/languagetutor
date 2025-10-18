@@ -313,10 +313,13 @@ function addSystemMessage(text) {
     const chatLog = document.getElementById('chat-log');
     const systemMsg = document.createElement('div');
     systemMsg.className = 'system-message';
-    systemMsg.style.cssText = 'text-align: center; padding: 8px; font-size: 0.875rem; color: var(--text-muted); margin: 16px 0;';
+    systemMsg.style.cssText = 'text-align: center; padding: 8px; font-size: 0.875rem; color: var(--text-muted); margin: 16px 0; opacity: 1;';
     systemMsg.textContent = text;
     chatLog.appendChild(systemMsg);
-    scrollToBottom();
+    
+    requestAnimationFrame(() => {
+        scrollToBottom();
+    });
 }
 
 // ==================== MESSAGE HANDLING ====================
@@ -418,13 +421,18 @@ async function sendMessage(messageText = null) {
 // ==================== UI MESSAGE FUNCTIONS ====================
 function addUserMessage(text) {
     const chatLog = document.getElementById('chat-log');
+    if (!chatLog) {
+        console.error('Chat log element not found!');
+        return;
+    }
+    
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message user-message slide-in-right';
+    messageDiv.className = 'message user-message';
 
     const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
 
     messageDiv.innerHTML = `
-        <div class="message-avatar float">👤</div>
+        <div class="message-avatar">👤</div>
         <div class="message-content touch-ripple">
             <div class="message-text">${escapeHtml(text)}</div>
             ${timestamp ? `
@@ -440,22 +448,35 @@ function addUserMessage(text) {
         </div>
     `;
 
+    // Append to DOM
     chatLog.appendChild(messageDiv);
-    scrollToBottom();
     
-    // Create particle effect
-    createParticles(messageDiv);
+    // Trigger animation after DOM update
+    requestAnimationFrame(() => {
+        messageDiv.classList.add('slide-in-right');
+        scrollToBottom();
+    });
+    
+    // Create particle effect (skip on reduced motion)
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setTimeout(() => createParticles(messageDiv), 100);
+    }
 }
 
 function addBotMessage(text) {
     const chatLog = document.getElementById('chat-log');
+    if (!chatLog) {
+        console.error('Chat log element not found!');
+        return;
+    }
+    
     const messageDiv = document.createElement('div');
-    messageDiv.className = 'message bot-message slide-in-left';
+    messageDiv.className = 'message bot-message';
 
     const timestamp = state.settings.timestampsEnabled ? getCurrentTime() : '';
 
     messageDiv.innerHTML = `
-        <div class="message-avatar float">🤖</div>
+        <div class="message-avatar">🤖</div>
         <div class="message-content touch-ripple">
             <div class="message-text">${formatBotMessage(text)}</div>
             ${timestamp ? `
@@ -474,11 +495,19 @@ function addBotMessage(text) {
         </div>
     `;
 
+    // Append to DOM
     chatLog.appendChild(messageDiv);
-    scrollToBottom();
     
-    // Create particle effect
-    createParticles(messageDiv);
+    // Trigger animation after DOM update
+    requestAnimationFrame(() => {
+        messageDiv.classList.add('slide-in-left');
+        scrollToBottom();
+    });
+    
+    // Create particle effect (skip on reduced motion)
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        setTimeout(() => createParticles(messageDiv), 100);
+    }
 }
 
 function formatBotMessage(text) {
@@ -1329,6 +1358,8 @@ function debounce(func, wait) {
 
 // Optimized smooth scroll with performance considerations
 function smoothScrollTo(element, duration = 500) {
+    if (!element) return;
+    
     // Use native smooth scrolling if available (better performance)
     if ('scrollBehavior' in document.documentElement.style) {
         element.scrollTo({
@@ -1338,36 +1369,19 @@ function smoothScrollTo(element, duration = 500) {
         return;
     }
     
-    // Fallback to custom animation
-    const start = element.scrollTop;
-    const end = element.scrollHeight;
-    const change = end - start;
-    const startTime = performance.now();
-    
-    function easeInOutQuad(t) {
-        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    }
-    
-    function animateScroll(currentTime) {
-        const elapsed = currentTime - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = easeInOutQuad(progress);
-        
-        element.scrollTop = start + change * eased;
-        
-        if (progress < 1) {
-            requestAnimationFrame(animateScroll);
-        }
-    }
-    
-    requestAnimationFrame(animateScroll);
+    // Fallback to direct scroll (more reliable)
+    element.scrollTop = element.scrollHeight;
 }
 
 // Enhanced scroll to bottom with smooth animation
-const scrollToBottom = debounce(() => {
+function scrollToBottom() {
     const chatArea = document.getElementById('chat-area');
-    smoothScrollTo(chatArea, 300);
-}, 100);
+    if (chatArea) {
+        requestAnimationFrame(() => {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        });
+    }
+}
 
 // Confetti effect for celebrations (optimized for performance)
 function createConfetti() {

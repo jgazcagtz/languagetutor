@@ -753,11 +753,11 @@ h1, h2, h3, h4, h5, h6 {
 .message {
     display: flex;
     gap: var(--spacing-md);
-    animation: messageSlideIn 0.3s ease;
-    opacity: 0;
-    animation-fill-mode: forwards;
+    opacity: 1;
+    visibility: visible;
 }
 
+/* Base message animation - can be overridden */
 @keyframes messageSlideIn {
     from {
         opacity: 0;
@@ -775,6 +775,8 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: var(--border-radius-lg);
     position: relative;
     word-wrap: break-word;
+    opacity: 1;
+    visibility: visible;
 }
 
 .user-message {
@@ -2063,12 +2065,13 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* Slide In Animations */
 .slide-in-left {
-    animation: slideInLeft 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: slideInLeft 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    opacity: 0;
 }
 
 @keyframes slideInLeft {
     from {
-        transform: translateX(-100%);
+        transform: translateX(-30px);
         opacity: 0;
     }
     to {
@@ -2078,12 +2081,13 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .slide-in-right {
-    animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    opacity: 0;
 }
 
 @keyframes slideInRight {
     from {
-        transform: translateX(100%);
+        transform: translateX(30px);
         opacity: 0;
     }
     to {
