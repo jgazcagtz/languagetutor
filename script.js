@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSwipeGestures();
     
     // Note: loadConversationHistory is called when language is selected
-    console.log('Language Tutor initialized');
+    console.log('LearnWG Language Tutor™ initialized - Version 2.1.1');
 });
 
 // Save conversation before page unload
@@ -402,6 +402,10 @@ async function sendMessage(messageText = null) {
     state.isProcessing = true;
 
     try {
+        // Add timeout to fetch request (25 seconds to match backend)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+        
         const response = await fetch('https://languagetutor.vercel.app/api/chatbot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -410,9 +414,12 @@ async function sendMessage(messageText = null) {
                 conversationHistory: state.conversationHistory,
                 language: state.selectedLanguage,
                 mode: state.currentMode,
-                max_tokens: 500
-            })
+                max_tokens: 300 // Reduced for faster responses
+            }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
 
         // Check if response is OK before parsing JSON
         if (!response.ok) {
@@ -473,18 +480,30 @@ async function sendMessage(messageText = null) {
         
         // User-friendly error messages
         let errorMessage = 'Sorry, I encountered an error. ';
-        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        let toastMessage = '';
+        
+        if (error.name === 'AbortError' || error.message.includes('aborted')) {
+            errorMessage += 'Request timed out. The AI is taking longer than usual. Please try again with a shorter message.';
+            toastMessage = 'Request timed out after 25 seconds';
+        } else if (error.message.includes('504') || error.message.includes('timeout') || error.message.includes('TIMEOUT')) {
+            errorMessage += 'The server timed out. Try asking a simpler question or wait a moment and retry.';
+            toastMessage = 'Server timeout - Try again';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
             errorMessage += 'Please check your internet connection.';
+            toastMessage = 'Network error';
         } else if (error.message.includes('401') || error.message.includes('403')) {
             errorMessage += 'Authentication error. Please check API configuration.';
+            toastMessage = 'Authentication error';
         } else if (error.message.includes('429')) {
-            errorMessage += 'Too many requests. Please wait a moment.';
+            errorMessage += 'Too many requests. Please wait a moment and try again.';
+            toastMessage = 'Rate limit exceeded';
         } else {
             errorMessage += 'Please try again.';
+            toastMessage = error.message.substring(0, 50);
         }
         
         addBotMessage(errorMessage);
-        showToast(error.message, 'error');
+        showToast(toastMessage || 'Error occurred', 'error');
     } finally {
         hideTypingIndicator();
         state.isProcessing = false;

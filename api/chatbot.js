@@ -74,21 +74,18 @@ Which language would you like to learn today?`;
                 }
             ];
 
-            // Optimize conversation history for token usage
+            // Optimize conversation history for token usage AND speed
             if (conversationHistory && Array.isArray(conversationHistory)) {
-                // Use sliding window: keep first 2 messages (context) + last 12 messages (recent conversation)
-                // This maintains initial context while limiting token usage
+                // Reduce to last 8 messages only for faster response (prevent timeout)
+                // This balances context vs. speed
                 let optimizedHistory = [];
                 
-                if (conversationHistory.length <= 14) {
+                if (conversationHistory.length <= 8) {
                     // If short conversation, send all
                     optimizedHistory = conversationHistory;
                 } else {
-                    // Send first 2 (initial context) + last 12 (recent exchanges)
-                    optimizedHistory = [
-                        ...conversationHistory.slice(0, 2),
-                        ...conversationHistory.slice(-12)
-                    ];
+                    // Send only last 8 messages (4 exchanges) for speed
+                    optimizedHistory = conversationHistory.slice(-8);
                 }
                 
                 messages.push(...optimizedHistory);
@@ -107,12 +104,13 @@ Which language would you like to learn today?`;
                 body: JSON.stringify({
                     model: 'gpt-4',
                     messages: messages,
-                    max_tokens: max_tokens || defaultMaxTokens,
+                    max_tokens: Math.min(max_tokens || defaultMaxTokens, 300), // Reduced for speed
                     temperature: 0.7,
-                    top_p: 0.95, // Slightly reduced for more focused responses
-                    frequency_penalty: 0.3, // Reduce repetition
-                    presence_penalty: 0.3, // Encourage topic diversity
-                    stream: false // Explicit non-streaming for simplicity
+                    top_p: 0.95,
+                    frequency_penalty: 0.3,
+                    presence_penalty: 0.3,
+                    stream: false,
+                    timeout: 25 // OpenAI timeout (leave 5s buffer for Vercel)
                 })
             });
 

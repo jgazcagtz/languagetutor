@@ -1,29 +1,67 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- Background Circle with Gradient -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Background Circle with Premium Gradient -->
   <defs>
-    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f093fb;stop-opacity:1" />
     </linearGradient>
+    <linearGradient id="letterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0f0f0;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
   
-  <!-- Background -->
-  <circle cx="50" cy="50" r="48" fill="url(#grad1)"/>
+  <!-- Background Circle -->
+  <circle cx="60" cy="60" r="56" fill="url(#bgGrad)" filter="url(#glow)"/>
   
-  <!-- Graduation Cap -->
-  <g transform="translate(50, 50)">
-    <!-- Cap Base -->
-    <polygon points="-25,-10 25,-10 30,-5 -30,-5" fill="#ffffff"/>
-    <!-- Cap Top -->
-    <rect x="-20" y="-20" width="40" height="10" fill="#ffffff" rx="2"/>
-    <!-- Tassel -->
-    <line x1="20" y1="-20" x2="25" y2="-10" stroke="#FFD700" stroke-width="2"/>
-    <circle cx="25" cy="-10" r="3" fill="#FFD700"/>
-    <!-- Book -->
-    <rect x="-15" y="5" width="30" height="20" fill="#ffffff" opacity="0.9" rx="2"/>
-    <line x1="-15" y1="15" x2="15" y2="15" stroke="#667eea" stroke-width="1"/>
-    <line x1="-10" y1="10" x2="10" y2="10" stroke="#667eea" stroke-width="1"/>
-    <line x1="-10" y1="20" x2="10" y2="20" stroke="#667eea" stroke-width="1"/>
+  <!-- Inner Circle (depth) -->
+  <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  
+  <!-- LearnWG Logo - Stylized "LW" with world element -->
+  <g transform="translate(60, 60)">
+    <!-- Letter "L" -->
+    <path d="M -25,-20 L -25,15 L -10,15" 
+          stroke="url(#letterGrad)" 
+          stroke-width="6" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          fill="none"/>
+    
+    <!-- Letter "W" with book pages effect -->
+    <path d="M -5,-20 L -5,0 L 3,15 L 11,0 L 11,-20" 
+          stroke="url(#letterGrad)" 
+          stroke-width="6" 
+          stroke-linecap="round" 
+          stroke-linejoin="round" 
+          fill="none"/>
+    
+    <!-- Globe lines (subtle) -->
+    <circle cx="20" cy="-15" r="10" 
+            fill="none" 
+            stroke="rgba(255,255,255,0.4)" 
+            stroke-width="1.5"/>
+    <line x1="20" y1="-25" x2="20" y2="-5" 
+          stroke="rgba(255,255,255,0.4)" 
+          stroke-width="1"/>
+    <ellipse cx="20" cy="-15" rx="10" ry="5" 
+             fill="none" 
+             stroke="rgba(255,255,255,0.4)" 
+             stroke-width="1"/>
+    
+    <!-- Sparkle accent -->
+    <circle cx="-28" cy="-25" r="2" fill="#FFD700" opacity="0.9"/>
+    <circle cx="25" cy="18" r="1.5" fill="#FFD700" opacity="0.8"/>
+    <circle cx="-8" cy="20" r="1.5" fill="#4facfe" opacity="0.9"/>
   </g>
+  
+  <!-- Subtle shadow for depth -->
+  <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(0,0,0,0.1)" stroke-width="2"/>
 </svg>
-

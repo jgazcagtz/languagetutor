@@ -3,12 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Language Tutor™ - AI-Powered Learning</title>
+    <meta name="description" content="LearnWG Language Tutor™ - AI-powered language learning with GPT-4 and natural voices. Learn English, Spanish, French, German, Portuguese with personalized AI tutoring.">
+    <meta name="keywords" content="language learning, AI tutor, GPT-4, LearnWG, language practice, multilingual, voice recognition">
+    <title>LearnWG Language Tutor™ - AI-Powered Learning</title>
     
     <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.svg">
     <link rel="apple-touch-icon" href="favicon.svg">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="LearnWG Language Tutor™">
+    <meta property="og:description" content="Master languages with AI-powered conversation practice. Natural voices, real-time feedback, 5 languages.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="favicon.svg">
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -28,8 +36,17 @@
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="logo">
-                    <i class="fas fa-graduation-cap"></i>
-                    <span>Language Tutor</span>
+                    <svg class="logo-icon" width="32" height="32" viewBox="0 0 120 120">
+                        <defs>
+                            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea"/>
+                                <stop offset="100%" style="stop-color:#f093fb"/>
+                            </linearGradient>
+                        </defs>
+                        <circle cx="60" cy="60" r="56" fill="url(#logoGrad)"/>
+                        <text x="60" y="75" font-family="Space Grotesk, sans-serif" font-size="48" font-weight="900" fill="white" text-anchor="middle">LW</text>
+                    </svg>
+                    <span>LearnWG Language Tutor™</span>
                 </div>
                 <button class="sidebar-toggle" id="sidebar-toggle">
                     <i class="fas fa-times"></i>
@@ -122,7 +139,7 @@
                     <span class="donate-text">Buy Me a Coffee</span>
                     <div class="donate-sparkle">✨</div>
                 </a>
-                <p class="donate-tagline">Support Language Tutor development</p>
+                <p class="donate-tagline">Support LearnWG Language Tutor™ development</p>
             </div>
         </aside>
 
@@ -135,8 +152,11 @@
                 </button>
                 <div class="header-info">
                     <h1>
-                        <i class="fas fa-globe"></i>
-                        Language Tutor
+                        <svg class="header-logo-icon" width="24" height="24" viewBox="0 0 120 120">
+                            <circle cx="60" cy="60" r="56" fill="url(#logoGrad)"/>
+                            <text x="60" y="75" font-family="Space Grotesk" font-size="48" font-weight="900" fill="white" text-anchor="middle">LW</text>
+                        </svg>
+                        LearnWG Language Tutor™
                     </h1>
                     <p id="current-language">Select a language to begin</p>
                 </div>
@@ -151,9 +171,18 @@
             <div class="welcome-screen" id="welcome-screen">
                 <div class="welcome-content">
                     <div class="welcome-icon">
-                        <i class="fas fa-language"></i>
+                        <svg width="80" height="80" viewBox="0 0 120 120">
+                            <defs>
+                                <linearGradient id="welcomeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea"/>
+                                    <stop offset="100%" style="stop-color:#f093fb"/>
+                                </linearGradient>
+                            </defs>
+                            <circle cx="60" cy="60" r="56" fill="url(#welcomeGrad)"/>
+                            <text x="60" y="80" font-family="Space Grotesk" font-size="56" font-weight="900" fill="white" text-anchor="middle">LW</text>
+                        </svg>
                     </div>
-                    <h2>Welcome to Language Tutor</h2>
+                    <h2>Welcome to LearnWG Language Tutor™</h2>
                     <p>Your AI-powered companion for mastering new languages</p>
                     <div class="welcome-features">
                         <div class="feature-card">
@@ -295,7 +324,7 @@
 
             <div class="modal-header">
                 <i class="fas fa-graduation-cap"></i>
-                <h2>Welcome to Language Tutor!</h2>
+                    <h2>Welcome to LearnWG Language Tutor™!</h2>
             </div>
 
             <div class="modal-body">
@@ -566,7 +595,7 @@
     </div>
 
     <footer class="app-footer">
-        <p>&copy; <span id="year"></span> <a href="https://learnwg.vercel.app/" target="_blank">LearnWG</a> - Powered by AI</p>
+        <p>&copy; <span id="year"></span> <a href="https://learnwg.vercel.app/" target="_blank">LearnWG</a> Language Tutor™ - Powered by GPT-4 & OpenAI TTS</p>
     </footer>
 
     <script src="script.js"></script>

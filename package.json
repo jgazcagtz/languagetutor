@@ -1,8 +1,8 @@
 {
-  "name": "language-tutor",
+  "name": "learnwg-language-tutor",
   "version": "2.1.1",
-  "description": "AI-powered language learning application with GPT-4 and OpenAI TTS",
-  "main": "index.html",
+  "description": "LearnWG Language Tutor™ - AI-powered language learning with GPT-4, OpenAI TTS, and 5 languages",
+  "main": "landing.html",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod",
@@ -10,20 +10,24 @@
     "start": "vercel dev"
   },
   "keywords": [
+    "learnwg",
+    "language-tutor",
     "language-learning",
-    "ai",
+    "ai-tutor",
     "gpt-4",
-    "openai",
-    "tts",
+    "openai-tts",
+    "multilingual",
     "education",
-    "multilingual"
+    "voice-recognition",
+    "teaching-studio"
   ],
-  "author": "LearnWG",
+  "author": "LearnWG <https://learnwg.vercel.app>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/languagetutor.git"
+    "url": "https://github.com/learnwg/language-tutor.git"
   },
+  "homepage": "https://learnwg.vercel.app",
   "engines": {
     "node": ">=14.x"
   }
