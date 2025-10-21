@@ -101,17 +101,16 @@ Which language would you like to learn today?`;
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${OPENAI_API_KEY}`
                 },
-                body: JSON.stringify({
-                    model: 'gpt-4',
-                    messages: messages,
-                    max_tokens: Math.min(max_tokens || defaultMaxTokens, 300), // Reduced for speed
-                    temperature: 0.7,
-                    top_p: 0.95,
-                    frequency_penalty: 0.3,
-                    presence_penalty: 0.3,
-                    stream: false,
-                    timeout: 25 // OpenAI timeout (leave 5s buffer for Vercel)
-                })
+            body: JSON.stringify({
+                model: 'gpt-4',
+                messages: messages,
+                max_tokens: Math.min(max_tokens || defaultMaxTokens, 300), // Reduced for speed
+                temperature: 0.7,
+                top_p: 0.95,
+                frequency_penalty: 0.3,
+                presence_penalty: 0.3,
+                stream: false
+            })
             });
 
             if (!openAIResponse.ok) {
