@@ -26,6 +26,8 @@ module.exports = async (req, res) => {
     };
     
     // Use a0e99841-438c-4a64-b6d5-50a3118d0c3e (Sonic Multilingual) as the reliable default
+    // Note: When using sonic-multilingual model, we must use a voice ID compatible with it.
+    // The ID a0e99841-438c-4a64-b6d5-50a3118d0c3e is a safe default.
     const selectedVoiceId = voice && voice !== 'auto' 
         ? voice 
         : (languageVoiceMapping[language] || 'a0e99841-438c-4a64-b6d5-50a3118d0c3e');
