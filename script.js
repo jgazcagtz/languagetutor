@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSwipeGestures();
     
     // Note: loadConversationHistory is called when language is selected
-    console.log('LearnWG Language Tutor™ initialized - Version 2.1.1');
+    console.log('LearnWG Language Tutor™ initialized - Version 2.3');
 });
 
 // Save conversation before page unload
@@ -923,6 +923,11 @@ async function speakText(text) {
 
     const sanitizedText = text.trim().substring(0, 1000); // Limit to 1000 chars
 
+    if (!sanitizedText) {
+        console.log('Skipping TTS for empty text');
+        return;
+    }
+
     // Stop any currently playing audio
     if (state.currentAudio) {
         state.currentAudio.pause();
@@ -948,7 +953,9 @@ async function speakText(text) {
             });
 
             if (!response.ok) {
-                throw new Error('Cartesia TTS service unavailable');
+                const errorData = await response.json().catch(() => ({}));
+                console.error('TTS API error details:', errorData);
+                throw new Error(errorData.error || 'Cartesia TTS service unavailable');
             }
 
             const data = await response.json();
