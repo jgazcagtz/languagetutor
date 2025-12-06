@@ -18,19 +18,17 @@ module.exports = async (req, res) => {
 
     // Default Cartesia voice IDs (Using known stable public voices)
     const languageVoiceMapping = {
-        'English': '694f9389-1f49-4641-ba63-1568b7e5742b', // Barbershop Man (Standard)
-        'Spanish': '694f9389-1f49-4641-ba63-1568b7e5742b', // Sonic Multilingual supports this ID
-        'French': '694f9389-1f49-4641-ba63-1568b7e5742b', 
-        'German': '694f9389-1f49-4641-ba63-1568b7e5742b', 
-        'Portuguese': '694f9389-1f49-4641-ba63-1568b7e5742b' 
+        'English': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e', // Sonic Multilingual
+        'Spanish': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e',
+        'French': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e',
+        'German': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e',
+        'Portuguese': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e' 
     };
     
-    // Note: Sonic Multilingual (a0e99841-438c-4a64-b6d5-50a3118d0c3e) was a placeholder.
-    // 694f9389-1f49-4641-ba63-1568b7e5742b is a widely compatible voice for Sonic.
-    
+    // Use a0e99841-438c-4a64-b6d5-50a3118d0c3e (Sonic Multilingual) as the reliable default
     const selectedVoiceId = voice && voice !== 'auto' 
         ? voice 
-        : (languageVoiceMapping[language] || '694f9389-1f49-4641-ba63-1568b7e5742b');
+        : (languageVoiceMapping[language] || 'a0e99841-438c-4a64-b6d5-50a3118d0c3e');
 
     const languageCodeMapping = {
         'English': 'en',

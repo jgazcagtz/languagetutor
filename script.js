@@ -511,6 +511,62 @@ async function sendMessage(messageText = null) {
 }
 
 // ==================== UI MESSAGE FUNCTIONS ====================
+// UI Functions for Recording Panel
+function showRecordingPanel() {
+    const panel = document.getElementById('voice-recording-panel');
+    if (panel) {
+        panel.style.display = 'block';
+        // Force reflow to enable animation
+        void panel.offsetHeight;
+        panel.classList.add('active');
+    }
+}
+
+function hideRecordingPanel() {
+    const panel = document.getElementById('voice-recording-panel');
+    if (panel) {
+        panel.classList.remove('active');
+        setTimeout(() => {
+            panel.style.display = 'none';
+        }, 300); // Match transition duration
+    }
+}
+
+function startRecordingTimer() {
+    const timerElement = document.getElementById('recording-timer');
+    if (!timerElement) return;
+    
+    state.recordingStartTime = Date.now();
+    state.recordingTimer = setInterval(() => {
+        const elapsed = Date.now() - state.recordingStartTime;
+        const seconds = Math.floor(elapsed / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        timerElement.textContent = `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function stopRecordingTimer() {
+    if (state.recordingTimer) {
+        clearInterval(state.recordingTimer);
+        state.recordingTimer = null;
+    }
+}
+
+function stopAudioVisualization() {
+    if (state.animationId) {
+        cancelAnimationFrame(state.animationId);
+        state.animationId = null;
+    }
+    
+    // Clear canvas
+    const canvas = document.getElementById('voice-canvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
 function addUserMessage(text) {
     const chatLog = document.getElementById('chat-log');
     if (!chatLog) {
@@ -729,7 +785,6 @@ async function startVoiceRecording() {
         isRecording = true;
         state.isRecording = true;
         
-        // UI Updates
         showRecordingPanel();
         startRecordingTimer();
         startAudioVisualization(stream); // Pass stream directly
