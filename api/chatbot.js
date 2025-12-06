@@ -1,4 +1,9 @@
 module.exports = async (req, res) => {
+    // Handle CORS preflight
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     // Ensure the request method is POST
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed. Please use POST.' });
