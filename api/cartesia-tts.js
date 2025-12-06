@@ -11,23 +11,33 @@ module.exports = async (req, res) => {
         return res.status(400).json({ error: 'Valid text is required' });
     }
 
-    // Default Cartesia voice IDs (Example IDs - these should be replaced with actual IDs from Cartesia)
-    // I am using some generic/placeholder IDs or names that Cartesia might support or resolving them.
-    // Ideally, we'd query Cartesia's voices endpoint, but for performance, we'll map them here.
+    // Default Cartesia voice IDs (Using known stable public voices)
     const languageVoiceMapping = {
-        'English': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e', // Example: 'Barbershop Man' or similar Sonic English voice
-        'Spanish': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e', // Sonic Multilingual
-        'French': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e', 
-        'German': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e', 
-        'Portuguese': 'a0e99841-438c-4a64-b6d5-50a3118d0c3e' 
+        'English': '694f9389-1f49-4641-ba63-1568b7e5742b', // Barbershop Man (Standard)
+        'Spanish': '694f9389-1f49-4641-ba63-1568b7e5742b', // Sonic Multilingual supports this ID
+        'French': '694f9389-1f49-4641-ba63-1568b7e5742b', 
+        'German': '694f9389-1f49-4641-ba63-1568b7e5742b', 
+        'Portuguese': '694f9389-1f49-4641-ba63-1568b7e5742b' 
     };
     
-    // Note: Sonic Multilingual (a0e99841-438c-4a64-b6d5-50a3118d0c3e) handles multiple languages.
-    // For specific voices, we should allow passing a voice ID.
+    // Note: Sonic Multilingual (a0e99841-438c-4a64-b6d5-50a3118d0c3e) was a placeholder.
+    // 694f9389-1f49-4641-ba63-1568b7e5742b is a widely compatible voice for Sonic.
     
     const selectedVoiceId = voice && voice !== 'auto' 
         ? voice 
-        : (languageVoiceMapping[language] || 'a0e99841-438c-4a64-b6d5-50a3118d0c3e');
+        : (languageVoiceMapping[language] || '694f9389-1f49-4641-ba63-1568b7e5742b');
+
+    const languageCodeMapping = {
+        'English': 'en',
+        'Spanish': 'es',
+        'French': 'fr',
+        'German': 'de',
+        'Portuguese': 'pt',
+        'Chinese': 'zh',
+        'Japanese': 'ja'
+    };
+
+    const targetLanguage = languageCodeMapping[language] || 'en';
 
     try {
         const response = await fetch('https://api.cartesia.ai/tts/bytes', {
@@ -49,7 +59,7 @@ module.exports = async (req, res) => {
                     encoding: "mp3",
                     sample_rate: 44100
                 },
-                language: language ? language.toLowerCase().substring(0, 2) : 'en' // Pass language code if needed by the model
+                language: targetLanguage
             })
         });
 

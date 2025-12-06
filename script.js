@@ -258,11 +258,6 @@ function selectLanguage(langCode, langName) {
 
     document.getElementById('current-language').textContent = `Learning ${langName}`;
 
-    // Update speech recognition language
-    if (recognition) {
-        recognition.lang = langCode;
-    }
-
     // Update voice settings display
     updateRecognitionLanguageDisplay();
     
@@ -406,7 +401,7 @@ async function sendMessage(messageText = null) {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
         
-        const response = await fetch('https://languagetutor.vercel.app/api/chatbot', {
+        const response = await fetch('/api/chatbot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -468,9 +463,9 @@ async function sendMessage(messageText = null) {
         }
 
         // Continue listening if continuous mode is on
-        if (state.voiceSettings.continuousListening && recognition && !state.isRecording) {
+        if (state.voiceSettings.continuousListening && !state.isRecording) {
             setTimeout(() => {
-                if (state.voiceSettings.continuousListening) {
+                if (state.voiceSettings.continuousListening && !state.isRecording) {
                     toggleVoiceRecognition();
                 }
             }, 1000);
@@ -776,6 +771,32 @@ function stopVoiceRecording() {
         micBtn.classList.remove('recording');
         micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
     }
+}
+
+// ==================== CONTINUOUS LISTENING MODE ====================
+function toggleContinuousMode() {
+    state.voiceSettings.continuousListening = !state.voiceSettings.continuousListening;
+    
+    const btn = document.getElementById('continuous-mode-btn');
+    if (state.voiceSettings.continuousListening) {
+        btn.classList.add('recording');
+        btn.style.background = 'var(--success-gradient)';
+        addSystemMessage('Continuous listening mode enabled');
+        
+        // Start listening if not already
+        if (!isRecording && state.selectedLanguageCode) {
+            toggleVoiceRecognition();
+        }
+    } else {
+        btn.classList.remove('recording');
+        btn.style.background = '';
+        addSystemMessage('Continuous listening mode disabled');
+    }
+    
+    // Sync with settings modal
+    const toggle = document.getElementById('continuous-listening-toggle');
+    if (toggle) toggle.checked = state.voiceSettings.continuousListening;
+    saveVoiceSettings();
 }
 
 function cancelVoiceRecording() {
