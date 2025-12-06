@@ -4,7 +4,7 @@ module.exports = async (req, res) => {
         return res.status(405).json({ error: 'Method not allowed. Please use POST.' });
     }
 
-    const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+    const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
     const { message, conversationHistory, language, mode, max_tokens } = req.body;
 
     // Mode-specific system prompt additions
@@ -76,67 +76,58 @@ Which language would you like to learn today?`;
 
             // Optimize conversation history for token usage AND speed
             if (conversationHistory && Array.isArray(conversationHistory)) {
-                // Reduce to last 8 messages only for faster response (prevent timeout)
-                // This balances context vs. speed
-                let optimizedHistory = [];
-                
-                if (conversationHistory.length <= 8) {
-                    // If short conversation, send all
-                    optimizedHistory = conversationHistory;
-                } else {
-                    // Send only last 8 messages (4 exchanges) for speed
-                    optimizedHistory = conversationHistory.slice(-8);
-                }
+                // Reduce to last 10 messages for context
+                const optimizedHistory = conversationHistory.length <= 10 
+                    ? conversationHistory 
+                    : conversationHistory.slice(-10);
                 
                 messages.push(...optimizedHistory);
             } else {
-                // If no history, just add the current message
                 messages.push({ role: 'user', content: message });
             }
 
-            // Make request to OpenAI
-            const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+            // Make request to DeepSeek
+            const deepSeekResponse = await fetch('https://api.deepseek.com/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
                 },
             body: JSON.stringify({
-                model: 'gpt-4',
+                model: 'deepseek-chat',
                 messages: messages,
-                max_tokens: Math.min(max_tokens || defaultMaxTokens, 300), // Reduced for speed
+                max_tokens: Math.min(max_tokens || defaultMaxTokens, 500),
                 temperature: 0.7,
                 top_p: 0.95,
-                frequency_penalty: 0.3,
-                presence_penalty: 0.3,
+                frequency_penalty: 0.0,
+                presence_penalty: 0.0,
                 stream: false
             })
             });
 
-            if (!openAIResponse.ok) {
-                const errorData = await openAIResponse.json();
-                console.error('OpenAI API Error:', errorData);
+            if (!deepSeekResponse.ok) {
+                const errorData = await deepSeekResponse.json().catch(() => ({}));
+                console.error('DeepSeek API Error:', errorData);
                 
-                // Provide more specific error messages
-                if (openAIResponse.status === 429) {
+                if (deepSeekResponse.status === 429) {
                     return res.status(429).json({ 
                         error: 'Our AI is currently busy. Please try again in a moment.' 
                     });
-                } else if (openAIResponse.status === 401) {
+                } else if (deepSeekResponse.status === 401) {
                     return res.status(500).json({ 
                         error: 'Authentication error. Please contact support.' 
                     });
                 } else {
-                    return res.status(openAIResponse.status).json({ 
+                    return res.status(deepSeekResponse.status).json({ 
                         error: errorData.error?.message || 'Error from AI service. Please try again.' 
                     });
                 }
             }
 
-            const data = await openAIResponse.json();
+            const data = await deepSeekResponse.json();
 
             if (!data.choices || !data.choices.length) {
-                console.error('Unexpected OpenAI API response:', data);
+                console.error('Unexpected DeepSeek API response:', data);
                 return res.status(500).json({ 
                     error: 'Unexpected response from AI. Please try again.' 
                 });

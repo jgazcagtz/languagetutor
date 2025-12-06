@@ -691,171 +691,149 @@ function hideTypingIndicator() {
     document.getElementById('typing-indicator').style.display = 'none';
 }
 
-// ==================== ADVANCED VOICE RECOGNITION ====================
-let recognition;
-let recognizing = false;
-
-if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-
-    recognition.onstart = () => {
-        recognizing = true;
-        state.isRecording = true;
-        showRecordingPanel();
-        startRecordingTimer();
-        startAudioVisualization();
-        
-        const micBtn = document.getElementById('mic-button');
-        micBtn.classList.add('recording');
-        micBtn.innerHTML = '<i class="fas fa-stop"></i>';
-    };
-
-    recognition.onend = () => {
-        recognizing = false;
-        state.isRecording = false;
-        hideRecordingPanel();
-        stopRecordingTimer();
-        stopAudioVisualization();
-        
-        const micBtn = document.getElementById('mic-button');
-        micBtn.classList.remove('recording');
-        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-    };
-
-    recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        const confidence = event.results[0][0].confidence;
-        
-        if (state.settings.voiceNotifications) {
-            playNotificationSound('success');
-        }
-        
-        document.getElementById('user-input').value = transcript;
-        sendMessage();
-    };
-
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        recognizing = false;
-        state.isRecording = false;
-        hideRecordingPanel();
-        stopRecordingTimer();
-        stopAudioVisualization();
-        
-        const micBtn = document.getElementById('mic-button');
-        micBtn.classList.remove('recording');
-        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-        
-        if (event.error === 'no-speech') {
-            addSystemMessage('No speech detected. Please try again.');
-        } else if (event.error === 'audio-capture') {
-            addSystemMessage('No microphone detected. Please check your microphone.');
-        } else if (event.error !== 'aborted') {
-            addSystemMessage(`Voice recognition error: ${event.error}`);
-        }
-        
-        if (state.settings.voiceNotifications) {
-            playNotificationSound('error');
-        }
-    };
-}
+// ==================== ADVANCED VOICE RECOGNITION (Cartesia/Whisper) ====================
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+let silenceTimer;
 
 function toggleVoiceRecognition() {
-    if (!recognition) {
-        alert('Voice recognition is not supported in your browser. Please use Chrome or Edge.');
-        return;
+    if (isRecording) {
+        stopVoiceRecording();
+    } else {
+        startVoiceRecording();
     }
+}
 
+async function startVoiceRecording() {
     if (!state.selectedLanguageCode) {
         alert('Please select a language first!');
         return;
     }
 
-    if (recognizing) {
-        recognition.stop();
-        return;
-    }
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
 
-    recognition.lang = state.selectedLanguageCode;
-    recognition.start();
-}
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                audioChunks.push(event.data);
+            }
+        };
 
-function cancelVoiceRecording() {
-    if (recognition && recognizing) {
-        recognition.abort();
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            await processAudioInput(audioBlob);
+            
+            // Stop all tracks to release microphone
+            stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        state.isRecording = true;
+        
+        // UI Updates
+        showRecordingPanel();
+        startRecordingTimer();
+        startAudioVisualization(stream); // Pass stream directly
+        
+        const micBtn = document.getElementById('mic-button');
+        micBtn.classList.add('recording');
+        micBtn.innerHTML = '<i class="fas fa-stop"></i>';
+        
+        addSystemMessage('Listening...');
+        
+        // Simple silence detection (stop after 5 seconds of silence? Hard to do without VAD)
+        // For now, we rely on manual stop or max duration
+        // We can add a max duration of 15 seconds for valid input
+        setTimeout(() => {
+            if (isRecording) {
+                stopVoiceRecording();
+                showToast('Recording limit reached (15s)', 'info');
+            }
+        }, 15000);
+
+    } catch (error) {
+        console.error('Error starting recording:', error);
+        showToast('Could not access microphone', 'error');
     }
 }
 
 function stopVoiceRecording() {
-    if (recognition && recognizing) {
-        recognition.stop();
-    }
-}
-
-// ==================== CONTINUOUS LISTENING MODE ====================
-function toggleContinuousMode() {
-    state.voiceSettings.continuousListening = !state.voiceSettings.continuousListening;
-    
-    const btn = document.getElementById('continuous-mode-btn');
-    if (state.voiceSettings.continuousListening) {
-        btn.classList.add('recording');
-        btn.style.background = 'var(--success-gradient)';
-        addSystemMessage('Continuous listening mode enabled');
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        state.isRecording = false;
         
-        // Start listening if not already
-        if (!recognizing && state.selectedLanguageCode) {
-            toggleVoiceRecognition();
-        }
-    } else {
-        btn.classList.remove('recording');
-        btn.style.background = '';
-        addSystemMessage('Continuous listening mode disabled');
-    }
-    
-    // Sync with settings modal
-    document.getElementById('continuous-listening-toggle').checked = state.voiceSettings.continuousListening;
-    saveVoiceSettings();
-}
-
-// ==================== RECORDING PANEL UI ====================
-function showRecordingPanel() {
-    const panel = document.getElementById('voice-recording-panel');
-    const langName = languageNames[state.selectedLanguageCode] || 'the selected language';
-    document.getElementById('recording-language').textContent = langName;
-    panel.style.display = 'block';
-    state.recordingStartTime = Date.now();
-}
-
-function hideRecordingPanel() {
-    document.getElementById('voice-recording-panel').style.display = 'none';
-}
-
-function startRecordingTimer() {
-    state.recordingStartTime = Date.now();
-    state.recordingTimer = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - state.recordingStartTime) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        document.getElementById('recording-timer').textContent = 
-            `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    }, 1000);
-}
-
-function stopRecordingTimer() {
-    if (state.recordingTimer) {
-        clearInterval(state.recordingTimer);
-        state.recordingTimer = null;
+        // UI Updates
+        hideRecordingPanel();
+        stopRecordingTimer();
+        stopAudioVisualization();
+        
+        const micBtn = document.getElementById('mic-button');
+        micBtn.classList.remove('recording');
+        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
     }
 }
 
-// ==================== AUDIO VISUALIZATION ====================
-async function startAudioVisualization() {
+function cancelVoiceRecording() {
+    if (mediaRecorder && isRecording) {
+        isRecording = false; // Prevent onstop processing if possible, or handle flag
+        mediaRecorder.stop();
+        state.isRecording = false;
+        // Logic to ignore the result in onstop
+        audioChunks = []; // Clear chunks
+        
+        hideRecordingPanel();
+        stopRecordingTimer();
+        stopAudioVisualization();
+        
+        const micBtn = document.getElementById('mic-button');
+        micBtn.classList.remove('recording');
+        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        addSystemMessage('Recording cancelled');
+    }
+}
+
+async function processAudioInput(audioBlob) {
+    // Show processing state
+    addSystemMessage('Processing audio...');
+    const micBtn = document.getElementById('mic-button');
+    micBtn.classList.add('processing'); // You might need to add css for this
+
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const response = await fetch('/api/cartesia-stt', {
+            method: 'POST',
+            body: audioBlob
+        });
+
+        if (!response.ok) {
+            throw new Error('STT failed');
+        }
+
+        const data = await response.json();
+        
+        if (data.text) {
+            document.getElementById('user-input').value = data.text;
+            sendMessage(); // Automatically send
+        } else {
+            showToast('Could not understand audio', 'warning');
+        }
+
+    } catch (error) {
+        console.error('STT Processing Error:', error);
+        showToast('Error processing speech', 'error');
+    } finally {
+        micBtn.classList.remove('processing');
+    }
+}
+
+// ==================== AUDIO VISUALIZATION (Updated) ====================
+async function startAudioVisualization(existingStream = null) {
+    try {
+        const stream = existingStream || await navigator.mediaDevices.getUserMedia({ audio: true });
         
         state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         state.analyser = state.audioContext.createAnalyser();
@@ -872,6 +850,7 @@ async function startAudioVisualization() {
 
 function visualizeAudio() {
     const canvas = document.getElementById('voice-canvas');
+    if (!canvas) return;
     const canvasContext = canvas.getContext('2d');
     const bufferLength = state.analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
@@ -884,8 +863,7 @@ function visualizeAudio() {
         state.analyser.getByteFrequencyData(dataArray);
         
         // Clear canvas
-        canvasContext.fillStyle = 'rgba(26, 26, 46, 0.3)';
-        canvasContext.fillRect(0, 0, canvas.width, canvas.height);
+        canvasContext.clearRect(0, 0, canvas.width, canvas.height);
         
         // Draw waveform
         const barWidth = (canvas.width / bufferLength) * 2.5;
@@ -909,39 +887,20 @@ function visualizeAudio() {
         // Update volume level bar
         const average = dataArray.reduce((a, b) => a + b) / bufferLength;
         const level = (average / 255) * 100;
-        document.getElementById('voice-level-fill').style.width = level + '%';
+        const levelBar = document.getElementById('voice-level-fill');
+        if (levelBar) levelBar.style.width = level + '%';
     };
     
     draw();
 }
 
-function stopAudioVisualization() {
-    if (state.animationId) {
-        cancelAnimationFrame(state.animationId);
-        state.animationId = null;
-    }
-    
-    if (state.microphone) {
-        state.microphone.disconnect();
-        state.microphone = null;
-    }
-    
-    if (state.audioContext) {
-        state.audioContext.close();
-        state.audioContext = null;
-    }
-    
-    document.getElementById('voice-level-fill').style.width = '0%';
-}
-
-// ==================== OPENAI TEXT-TO-SPEECH ====================
+// ==================== CARTESIA TEXT-TO-SPEECH ====================
 async function speakText(text) {
     if (!state.settings.ttsEnabled) {
         return;
     }
 
-    // Sanitize text to avoid cache misses from minor formatting differences
-    const sanitizedText = text.trim().substring(0, 500); // Limit to 500 chars for TTS
+    const sanitizedText = text.trim().substring(0, 1000); // Limit to 1000 chars
 
     // Stop any currently playing audio
     if (state.currentAudio) {
@@ -949,14 +908,15 @@ async function speakText(text) {
         state.currentAudio = null;
     }
 
-    // Check cache first (use sanitized text for consistent caching)
+    // Check cache
     const cacheKey = `${sanitizedText}_${state.voiceSettings.selectedVoice}_${state.selectedLanguage}`;
     let audioData = state.audioCache.get(cacheKey);
 
     if (!audioData) {
         try {
-            // Call our TTS API endpoint
-            const response = await fetch('https://languagetutor.vercel.app/api/tts', {
+            // Show loading indicator or toast if needed, but usually fast enough
+            
+            const response = await fetch('/api/cartesia-tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -967,8 +927,7 @@ async function speakText(text) {
             });
 
             if (!response.ok) {
-                console.warn('TTS API returned error status:', response.status);
-                throw new Error('TTS service unavailable');
+                throw new Error('Cartesia TTS service unavailable');
             }
 
             const data = await response.json();
@@ -979,7 +938,7 @@ async function speakText(text) {
             
             audioData = data.audio;
             
-            // Cache the audio (LRU cache with size limit)
+            // Cache
             if (state.audioCache.size >= 20) {
                 const firstKey = state.audioCache.keys().next().value;
                 state.audioCache.delete(firstKey);
@@ -987,13 +946,12 @@ async function speakText(text) {
             state.audioCache.set(cacheKey, audioData);
         } catch (error) {
             console.error('TTS Error:', error);
-            // Fallback to browser TTS if OpenAI fails
             fallbackBrowserTTS(sanitizedText);
             return;
         }
     }
 
-    // Play the audio
+    // Play
     try {
         const audioBlob = base64ToBlob(audioData, 'audio/mp3');
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -1002,23 +960,14 @@ async function speakText(text) {
         state.currentAudio.volume = state.voiceSettings.volume;
         state.currentAudio.playbackRate = state.voiceSettings.rate;
         
-        // Cleanup URL after playing to prevent memory leaks
         state.currentAudio.onended = () => {
             URL.revokeObjectURL(audioUrl);
             state.currentAudio = null;
         };
         
-        // Handle playback errors
-        state.currentAudio.onerror = () => {
-            URL.revokeObjectURL(audioUrl);
-            state.currentAudio = null;
-            console.error('Audio playback error');
-        };
-        
         await state.currentAudio.play();
     } catch (error) {
         console.error('Audio playback error:', error);
-        // Don't fallback on playback errors, just fail silently
     }
 }
 
@@ -1073,20 +1022,16 @@ function populateVoiceList() {
     const voiceSelect = document.getElementById('voice-select');
     if (!voiceSelect) return;
     
-    // OpenAI TTS voices with descriptions
-    const openAIVoices = [
-        { value: 'auto', name: 'Auto (Best for Language)', description: 'Automatically selects the best voice for your learning language' },
-        { value: 'nova', name: 'Nova', description: 'Warm, friendly female voice - excellent for teaching' },
-        { value: 'shimmer', name: 'Shimmer', description: 'Clear, articulate female voice - great for pronunciation' },
-        { value: 'alloy', name: 'Alloy', description: 'Neutral, balanced voice - professional tutor style' },
-        { value: 'echo', name: 'Echo', description: 'Clear male voice - good for deeper tones' },
-        { value: 'fable', name: 'Fable', description: 'Expressive British accent - engaging storyteller' },
-        { value: 'onyx', name: 'Onyx', description: 'Deep, authoritative male voice - formal instruction' }
+    // OpenAI TTS voices with descriptions (Updated to Cartesia naming for context)
+    const cartesiaVoices = [
+        { value: 'auto', name: 'Auto (Sonic Multilingual)', description: 'Best voice for your learning language' },
+        { value: 'a0e99841-438c-4a64-b6d5-50a3118d0c3e', name: 'Standard Voice', description: 'Clear, natural Cartesia voice' }
+        // Add more specific Cartesia IDs if available
     ];
     
     voiceSelect.innerHTML = '';
     
-    openAIVoices.forEach(voice => {
+    cartesiaVoices.forEach(voice => {
         const option = document.createElement('option');
         option.value = voice.value;
         option.textContent = `${voice.name} - ${voice.description}`;

@@ -1,7 +1,7 @@
 {
   "name": "learnwg-language-tutor",
   "version": "2.1.1",
-  "description": "LearnWG Language Tutor™ - AI-powered language learning with GPT-4, OpenAI TTS, and 5 languages",
+  "description": "LearnWG Language Tutor™ - AI-powered language learning with DeepSeek, Cartesia Voice, and 5 languages",
   "main": "landing.html",
   "scripts": {
     "dev": "vercel dev",
@@ -14,8 +14,8 @@
     "language-tutor",
     "language-learning",
     "ai-tutor",
-    "gpt-4",
-    "openai-tts",
+    "deepseek",
+    "cartesia",
     "multilingual",
     "education",
     "voice-recognition",
@@ -29,7 +29,7 @@
   },
   "homepage": "https://learnwg.vercel.app",
   "engines": {
-    "node": ">=14.x"
+    "node": ">=18.x"
   }
 }
 
