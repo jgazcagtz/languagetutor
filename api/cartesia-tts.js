@@ -12,6 +12,13 @@ module.exports = async (req, res) => {
     const CARTESIA_API_KEY = process.env.CARTESIA_API_KEY;
     const { text, voice, language } = req.body;
 
+    if (!CARTESIA_API_KEY) {
+        console.error('CARTESIA_API_KEY is not set in environment variables');
+        return res.status(500).json({ 
+            error: 'Cartesia API key not configured. Please set CARTESIA_API_KEY environment variable.' 
+        });
+    }
+
     if (!text || typeof text !== 'string') {
         return res.status(400).json({ error: 'Valid text is required' });
     }

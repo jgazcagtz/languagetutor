@@ -1009,8 +1009,13 @@ async function speakText(text) {
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('TTS API error details:', errorData);
-                throw new Error(errorData.error || 'Cartesia TTS service unavailable');
+                const errorMessage = errorData.error || `Cartesia TTS service unavailable (${response.status})`;
+                console.error('TTS API error details:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    error: errorData
+                });
+                throw new Error(errorMessage);
             }
 
             const data = await response.json();
@@ -1029,6 +1034,16 @@ async function speakText(text) {
             state.audioCache.set(cacheKey, audioData);
         } catch (error) {
             console.error('TTS Error:', error);
+            
+            // Check if it's a configuration error (API key missing)
+            if (error.message && error.message.includes('API key not configured')) {
+                showToast('Cartesia TTS not configured. Please set CARTESIA_API_KEY.', 'error');
+                // Don't fall back to browser TTS for configuration errors
+                return;
+            }
+            
+            // For other errors, show warning and fall back
+            console.warn('Cartesia TTS failed, falling back to browser TTS:', error.message);
             fallbackBrowserTTS(sanitizedText);
             return;
         }
@@ -1054,9 +1069,9 @@ async function speakText(text) {
     }
 }
 
-// Fallback to browser TTS if OpenAI fails
+// Fallback to browser TTS if Cartesia TTS fails
 function fallbackBrowserTTS(text) {
-    console.warn('Falling back to browser TTS - OpenAI TTS unavailable');
+    console.warn('Falling back to browser TTS - Cartesia TTS unavailable');
     
     if (!('speechSynthesis' in window)) {
         console.error('Browser TTS also unavailable');
@@ -1078,9 +1093,9 @@ function fallbackBrowserTTS(text) {
     }
     
     // Show warning that we're using browser TTS
-    showToast('Using browser voice (OpenAI TTS offline)', 'info');
+    showToast('Using browser voice (Cartesia TTS unavailable)', 'warning');
     
-            speechSynthesis.speak(utterance);
+    speechSynthesis.speak(utterance);
 }
 
 // Utility function to convert base64 to Blob
